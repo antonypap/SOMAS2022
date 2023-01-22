@@ -21,6 +21,7 @@ type AgentThree struct {
 	chairTolerance        int
 	proposalTolerance     map[commons.ID]int
 	fightDecisionsHistory commons.ImmutableList[decision.ImmutableFightResult]
+	disobedienceFactor    int
 }
 
 // Update internal parameters at the end of each stage
@@ -53,13 +54,14 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, _ *commons.I
 	}
 }
 
-func NewAgentThree() agent.Strategy {
+func NewAgentThree(df int) agent.Strategy {
 	return &AgentThree{
-		utilityScore:      CreateUtility(),
-		uR:                CreateUtility(),
-		uP:                CreateUtility(),
-		uC:                CreateUtility(),
-		chairTolerance:    0,
-		proposalTolerance: make(map[commons.ID]int, 0),
+		utilityScore:       CreateUtility(),
+		uR:                 CreateUtility(),
+		uP:                 CreateUtility(),
+		uC:                 CreateUtility(),
+		chairTolerance:     0,
+		proposalTolerance:  make(map[commons.ID]int, 0),
+		disobedienceFactor: df,
 	}
 }

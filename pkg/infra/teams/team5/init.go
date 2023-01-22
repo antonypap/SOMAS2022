@@ -9,8 +9,8 @@ import (
 	"infra/game/state"
 )
 
-var InitAgentMap = map[commons.ID]func() agent.Strategy{
-	"RANDOM": example.NewRandomAgent,
+var InitAgentMap = map[commons.ID]agent.Strategy{
+	"RANDOM": example.NewRandomAgent(),
 	// "AggressiveAgent": NewProbabilisticAgent(0.1, 0.8, 0.1),
 	//	"DefensiveAgent": NewProbabilisticAgent(0.1, 0.8, 0.1),
 	// "CowardlyAgent": NewProbabilisticAgent(0.9, 0.05, 0.05),

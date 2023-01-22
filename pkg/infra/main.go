@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"infra/config"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/decision"
@@ -23,11 +24,13 @@ import (
 	"github.com/benbjohnson/immutable"
 )
 
-var InitAgentMap = map[commons.ID]func() agent.Strategy{
-	"RANDOM": example.NewRandomAgent,
+var dis = config.EnvToUint("DISOBEY", 0)
+
+var InitAgentMap = map[commons.ID]agent.Strategy{
+	"RANDOM": example.NewRandomAgent(),
 	// "TEAM1":  team1.NewSocialAgent,
 	// "TEAM2":  team2.NewAgent2,
-	"TEAM3": team3.NewAgentThree,
+	"TEAM3": team3.NewAgentThree(50),
 	// "TEAM5":  team5.NewAgent5,
 	// "TEAM6":  team6.NewTeam6Agent,
 	// "TEAM4":  team4.NewAgentFour,

@@ -24,11 +24,11 @@ import (
 	"github.com/benbjohnson/immutable"
 )
 
-var InitAgentMap = map[commons.ID]func() agent.Strategy{
-	"SocialAgent": NewSocialAgent,
+var InitAgentMap = map[commons.ID]agent.Strategy{
+	"SocialAgent": NewSocialAgent(),
 }
 
-func InitAgents(defaultStrategyMap map[commons.ID]func() agent.Strategy, gameConfig config.GameConfig, ptr *state.View) (numAgents uint, agentMap map[commons.ID]agent.Agent, agentStateMap map[commons.ID]state.AgentState, inventoryMap state.InventoryMap) {
+func InitAgents(defaultStrategyMap map[commons.ID]agent.Strategy, gameConfig config.GameConfig, ptr *state.View) (numAgents uint, agentMap map[commons.ID]agent.Agent, agentStateMap map[commons.ID]state.AgentState, inventoryMap state.InventoryMap) {
 	// Initialise a random seed
 	rand.Seed(time.Now().UnixNano())
 	agentMap = make(map[commons.ID]agent.Agent)
