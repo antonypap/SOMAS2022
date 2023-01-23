@@ -29,7 +29,7 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, _ *commons.I
 	AS := baseAgent.AgentState()
 	view := baseAgent.View()
 	// Initialise utils
-	if view.CurrentLevel() == 1 {
+	if view.CurrentLevel() == 0 {
 		a.utilityScore = a.InitUtility(baseAgent)
 		a.uR = a.InitUtility(baseAgent)
 		a.uP = a.InitUtility(baseAgent)

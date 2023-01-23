@@ -130,7 +130,7 @@ func getAllocation(gs state.State, agentMap map[commons.ID]agent.Agent, pool *st
 	wantedItems := make(map[commons.ItemID]map[commons.ID]struct{})
 
 	for id, itemIDS := range m {
-		alloc := commons.MapToSortedImmutable[commons.ItemID, struct{}](itemIDS)
+		alloc := commons.MapToSortedImmutable(itemIDS)
 		if gs.Defection {
 			agentLoot := agentMap[id].Strategy.LootAction(*agentMap[id].BaseAgent, alloc, prop)
 			addWantedLootToItemAllocMap(agentLoot, wantedItems, id)

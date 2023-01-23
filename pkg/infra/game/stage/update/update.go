@@ -15,13 +15,11 @@ func UpdateInternalStates(agentMap map[commons.ID]agent.Agent, globalState *stat
 	var wg sync.WaitGroup
 	agentLogChan := make(chan logging.AgentLog)
 	for id, a := range agentMap {
-		id := id
-		a := a
 		wg.Add(1)
-		go func(wait *sync.WaitGroup) {
-			a.HandleUpdateInternalState(globalState.AgentState[id], immutableFightRounds, votesResult, agentLogChan)
+		go func(wait *sync.WaitGroup, id *string, a *agent.Agent) {
+			a.HandleUpdateInternalState(globalState.AgentState[*id], immutableFightRounds, votesResult, agentLogChan)
 			wait.Done()
-		}(&wg)
+		}(&wg, &id, &a)
 	}
 
 	agentLogs := make(map[commons.ID]logging.AgentLog)
