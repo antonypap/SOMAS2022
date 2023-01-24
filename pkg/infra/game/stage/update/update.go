@@ -14,10 +14,13 @@ import (
 func UpdateInternalStates(agentMap map[commons.ID]agent.Agent, globalState *state.State, immutableFightRounds *commons.ImmutableList[decision.ImmutableFightResult], votesResult *immutable.Map[decision.Intent, uint]) map[commons.ID]logging.AgentLog {
 	var wg sync.WaitGroup
 	agentLogChan := make(chan logging.AgentLog)
+	lock := sync.RWMutex{}
 	for id, a := range agentMap {
 		wg.Add(1)
 		go func(wait *sync.WaitGroup, id *string, a *agent.Agent) {
+			lock.Lock()
 			a.HandleUpdateInternalState(globalState.AgentState[*id], immutableFightRounds, votesResult, agentLogChan)
+			lock.Unlock()
 			wait.Done()
 		}(&wg, &id, &a)
 	}
