@@ -66,6 +66,54 @@ func GetDefenceAllAgents(baseAgent agent.BaseAgent) []float64 {
 	return agentStaminaMap
 }
 
+func GetHealthTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNhealthMap []float64
+	// loop through TSN and extract HP
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNhealthMap = append(TSNhealthMap, float64(hiddenState.Hp))
+	}
+	return TSNhealthMap
+}
+
+func GetStaminaTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNstaminaMap []float64
+	// loop through TSN and extract Stamina
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNstaminaMap = append(TSNstaminaMap, float64(hiddenState.Stamina))
+	}
+	return TSNstaminaMap
+}
+
+func GetAttackTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNattackMap []float64
+	// loop through TSN and extract Attack
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNattackMap = append(TSNattackMap, float64(hiddenState.Attack))
+	}
+	return TSNattackMap
+}
+
+func GetDefenceTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNdefenceMap []float64
+	// loop through TSN and extract Defense
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNdefenceMap = append(TSNdefenceMap, float64(hiddenState.Defense))
+	}
+	return TSNdefenceMap
+}
+
 // func (a *AgentThree) FightTSN(agentMap *immutable.Map[commons.ID, state.HiddenAgentState]) {
 
 // 	// for i, id := range a.TSN {
