@@ -67,7 +67,7 @@ func (a *AgentThree) FightActionNoProposal(baseAgent agent.BaseAgent) decision.F
 func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[message.FightInform], baseAgent agent.BaseAgent, fightactionMap *immutable.Map[commons.ID, decision.FightAction]) {
 	id := baseAgent.ID()
 	choice, _ := fightactionMap.Get(id)
-	HPThreshold, StaminaThreshold, _, DefenseThreshold := a.thresholdDecision(baseAgent, choice)
+	HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold := a.thresholdDecision(baseAgent, choice)
 	// fmt.Println(m)
 
 	// should i make a proposal (based on personality)
@@ -77,15 +77,25 @@ func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[messag
 	if makesProposal < a.personality {
 		rules := make([]proposal.Rule[decision.FightAction], 0)
 
+		// fight rule HT AND ST condition
 		rules = append(rules, *proposal.NewRule(decision.Attack,
 			proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, uint(HPThreshold)),
 				*proposal.NewComparativeCondition(proposal.Stamina, proposal.GreaterThan, uint(StaminaThreshold))),
 		))
-
+		// fight rule ATT condition
+		rules = append(rules, *proposal.NewRule(decision.Attack,
+			proposal.NewComparativeCondition(proposal.TotalAttack, proposal.GreaterThan, uint(AttackThreshold)),
+		))
+		// defend rule HP AND ST condition
+		rules = append(rules, *proposal.NewRule(decision.Defend,
+			proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, uint(HPThreshold)),
+				*proposal.NewComparativeCondition(proposal.Stamina, proposal.GreaterThan, uint(StaminaThreshold))),
+		))
+		// defend rule DEF condition
 		rules = append(rules, *proposal.NewRule(decision.Defend,
 			proposal.NewComparativeCondition(proposal.TotalDefence, proposal.GreaterThan, uint(DefenseThreshold)),
 		))
-
+		// COWER condition (as low as possible)
 		rules = append(rules, *proposal.NewRule(decision.Cower,
 			proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, 1),
 		))
@@ -160,61 +170,54 @@ func (a *AgentThree) HandleFightProposal(m message.Proposal[decision.FightAction
 }
 
 func (a *AgentThree) thresholdDecision(baseAgent agent.BaseAgent, choice decision.FightAction) (float64, float64, float64, float64) {
-	// view := baseAgent.View()
-	// agentState := baseAgent.AgentState()
 	HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold := 0.0, 0.0, 0.0, 0.0
+	// initiate modifers
+	alpha := 0.2
+	beta := 0.1
+	// extract agents
+	agentState := baseAgent.AgentState()
+	// get my stats
+	myHP := float64(agentState.Hp)
+	myST := float64(agentState.Stamina)
+	myATT := float64(agentState.Attack)
+	myDEF := float64(agentState.Defense)
+	// get group stats
+	groupAvHP := AverageArray(GetHealthAllAgents(baseAgent))
+	groupAvST := AverageArray(GetStaminaAllAgents(baseAgent))
+	groupAvATT := AverageArray(GetAttackAllAgents(baseAgent))
+	groupAvDEF := AverageArray(GetDefenceAllAgents(baseAgent))
 
-	// var agentFought bool = false
+	// get differences (group to me)
+	Delta1HP := groupAvHP - float64(myHP)
+	Delta1ST := groupAvST - float64(myST)
+	Delta1ATT := groupAvDEF - float64(myATT)
+	Delta1DEF := groupAvATT - float64(myDEF)
 
-	// // iterate until we get most recent history
-	// i := 0
-	// itr := a.fightRoundsHistory.Iterator()
-	// for !itr.Done() {
-	// 	res, _ := itr.Next()
-	// 	i += 1
+	if len(a.TSN) > 0 {
+		// get TSN average stats
+		TSNavHP := AverageArray(GetHealthTSN(baseAgent, a.TSN))
+		TSNavST := AverageArray(GetStaminaTSN(baseAgent, a.TSN))
+		TSNavATT := AverageArray(GetAttackTSN(baseAgent, a.TSN))
+		TSNavDEF := AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+		// get differences (group to TSN)
+		Delta2HP := groupAvHP - TSNavHP
+		Delta2ST := groupAvST - TSNavST
+		Delta2ATT := groupAvATT - TSNavATT
+		Delta2DEF := groupAvDEF - TSNavDEF
 
-	// 	if i == a.fightRoundsHistory.Len()-1 {
-	// 		agents := res.AttackingAgents()
-	// 		itr2 := agents.Iterator()
-	// 		// search for our agent in fight list
-	// 		for !itr.Done() {
-	// 			_, attackingAgentID := itr2.Next()
-	// 			if attackingAgentID == baseAgent.ID() {
-	// 				agentFought = true
-	// 			}
-	// 		}
-	// 	}
-	// }
+		HPThreshold = myHP + alpha*Delta1HP + beta*Delta2HP
+		StaminaThreshold = myST + alpha*Delta1ST + beta*Delta2ST
+		AttackThreshold = myATT + alpha*Delta1ATT + beta*Delta2ATT
+		DefenseThreshold = myDEF + alpha*Delta1DEF + beta*Delta2DEF
 
-	// if choice == decision.Cower {
-	// 	if agentState.Hp >= uint(AverageArray(GetHealthAllAgents(baseAgent))) {
-	// 		HPThreshold1 = 1.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-	// 	if agentState.Stamina >= uint(AverageArray(GetStaminaAllAgents(baseAgent))) {
-	// 		StaminaThreshold1 = 1.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
+		return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
+	}
+	// caluclate the thresholds (for all the decisions)
+	HPThreshold = (myHP + alpha*Delta1HP) * float64(0.98)
+	StaminaThreshold = (myST + alpha*Delta1ST) * float64(0.98)
+	AttackThreshold = (myATT + alpha*Delta1ATT) * float64(0.98)
+	DefenseThreshold = (myDEF + alpha*Delta1DEF) * float64(0.98)
 
-	// 	if agentState.Hp < uint(AverageArray(GetHealthAllAgents(baseAgent))) {
-	// 		HPThreshold1 = 0.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-	// 	if agentState.Stamina < uint(AverageArray(GetStaminaAllAgents(baseAgent))) {
-	// 		StaminaThreshold1 = 0.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-
-	// 	AttackThreshold1 = 1.1 * AverageArray(GetAttackAllAgents(baseAgent))
-	// 	DefenseThreshold1 = 1.1 * AverageArray(GetDefenceAllAgents(baseAgent))
-	// }
-
-	HPThreshold = 0.85 * AverageArray(GetHealthAllAgents(baseAgent))
-	StaminaThreshold = 0.85 * AverageArray(GetHealthAllAgents(baseAgent))
-	AttackThreshold = 0.4 * AverageArray(GetAttackAllAgents(baseAgent))
-	DefenseThreshold = 0.9 * AverageArray(GetDefenceAllAgents(baseAgent))
-	// else {
-	// 	HPThreshold1 = 500.0
-	// 	StaminaThreshold1 = 500.0
-	// 	AttackThreshold1 = 10.0
-	// 	DefenseThreshold1 = 20.0
-	// }
 	return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
 }
 
