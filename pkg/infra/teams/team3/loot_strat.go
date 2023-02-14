@@ -53,11 +53,13 @@ func (a *AgentThree) LootActionNoProposal(baseAgent agent.BaseAgent) immutable.S
 	return *builder.Map()
 }
 
+// function to take loot when given access to pool
 func (a *AgentThree) LootAction(
 	baseAgent agent.BaseAgent,
 	proposedLoot immutable.SortedMap[commons.ItemID, struct{}],
 	acceptedProposal message.Proposal[decision.LootAction],
 ) immutable.SortedMap[commons.ItemID, struct{}] {
+	// take allocated loot
 	return proposedLoot
 }
 
@@ -70,7 +72,7 @@ func (a *AgentThree) HandleLootInformation(m message.TaggedInformMessage[message
 		sendProposal := rand.Intn(100)
 		if sendProposal < a.personality {
 			// general and send a loot proposal
-			baseAgent.SendLootProposalToLeader(a.generateLootProposal())
+			baseAgent.SendLootProposalToLeader(a.generateLootProposal(baseAgent))
 		}
 	default:
 		return
@@ -83,8 +85,8 @@ func (a *AgentThree) RequestLootProposal(baseAgent agent.BaseAgent) { // put you
 	if sendProposal > a.personality {
 		return
 	}
-	// general and send a loot proposal at the start of every turn
-	baseAgent.SendLootProposalToLeader(a.generateLootProposal())
+	// generate and send a loot proposal at the start of every turn
+	baseAgent.SendLootProposalToLeader(a.generateLootProposal(baseAgent))
 }
 
 func (a *AgentThree) HandleLootProposal(_ message.Proposal[decision.LootAction], _ agent.BaseAgent) decision.Intent {
@@ -105,22 +107,81 @@ func (a *AgentThree) HandleLootProposal(_ message.Proposal[decision.LootAction],
 	}
 }
 
-func (a *AgentThree) generateLootProposal() commons.ImmutableList[proposal.Rule[decision.LootAction]] {
+func (a *AgentThree) generateLootProposal(baseAgent agent.BaseAgent) commons.ImmutableList[proposal.Rule[decision.LootAction]] {
 	rules := make([]proposal.Rule[decision.LootAction], 0)
+	HpPotionThresh, StPotionThresh, SwordThresh, ShieldThresh := a.LootThresholdDecision(baseAgent)
 
+	// health potion rule
 	rules = append(rules, *proposal.NewRule(decision.HealthPotion,
-		proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(0.5*float64(GetStartingHP())))))
-
-	rules = append(rules, *proposal.NewRule(decision.StaminaPotion,
-		proposal.NewComparativeCondition(proposal.Stamina, proposal.LessThan, uint(0.5*float64(GetStartingStamina())))))
-
+		proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh))))
+	// weapon rules
 	rules = append(rules, *proposal.NewRule(decision.Weapon,
-		proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(0.5*float64(GetStartingHP())))))
-
+		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh)),
+			*proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(SwordThresh)),
+		)))
+	// stamina potion rule
+	rules = append(rules, *proposal.NewRule(decision.StaminaPotion,
+		proposal.NewComparativeCondition(proposal.Stamina, proposal.LessThan, uint(StPotionThresh))))
+	// shield rules
 	rules = append(rules, *proposal.NewRule(decision.Shield,
-		proposal.NewComparativeCondition(proposal.TotalDefence, proposal.LessThan, uint(0.5*float64(GetStartingHP())))))
+		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh)),
+			*proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(ShieldThresh)),
+		)))
 
 	return *commons.NewImmutableList(rules)
+}
+
+// determin loot thresholds
+func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
+	HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold := 0.0, 0.0, 0.0, 0.0
+	// initiate modifers
+	alpha := 0.2
+	beta := 0.1
+	// extract agents
+	agentState := baseAgent.AgentState()
+	// get my stats
+	myHP := float64(agentState.Hp)
+	myST := float64(agentState.Stamina)
+	myATT := float64(agentState.Attack)
+	myDEF := float64(agentState.Defense)
+	// get group stats
+	groupAvHP := AverageArray(GetHealthAllAgents(baseAgent))
+	groupAvST := AverageArray(GetStaminaAllAgents(baseAgent))
+	groupAvATT := AverageArray(GetAttackAllAgents(baseAgent))
+	groupAvDEF := AverageArray(GetDefenceAllAgents(baseAgent))
+
+	// get differences (group to me)
+	Delta1HP := groupAvHP - float64(myHP)
+	Delta1ST := groupAvST - float64(myST)
+	Delta1ATT := groupAvDEF - float64(myATT)
+	Delta1DEF := groupAvATT - float64(myDEF)
+
+	if len(a.TSN) > 0 {
+		// get TSN average stats
+		TSNavHP := AverageArray(GetHealthTSN(baseAgent, a.TSN))
+		TSNavST := AverageArray(GetStaminaTSN(baseAgent, a.TSN))
+		TSNavATT := AverageArray(GetAttackTSN(baseAgent, a.TSN))
+		TSNavDEF := AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+		// get differences (group to TSN)
+		Delta2HP := groupAvHP - TSNavHP
+		Delta2ST := groupAvST - TSNavST
+		Delta2ATT := groupAvATT - TSNavATT
+		Delta2DEF := groupAvDEF - TSNavDEF
+
+		HPThreshold = myHP + alpha*Delta1HP + beta*Delta2HP
+		StaminaThreshold = myST + alpha*Delta1ST + beta*Delta2ST
+		AttackThreshold = myATT + alpha*Delta1ATT + beta*Delta2ATT
+		DefenseThreshold = myDEF + alpha*Delta1DEF + beta*Delta2DEF
+
+		return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
+	}
+	// caluclate the thresholds (for all the decisions)
+	HPThreshold = (myHP + alpha*Delta1HP) * float64(1.02)
+	StaminaThreshold = (myST + alpha*Delta1ST) * float64(1.02)
+	AttackThreshold = (myATT + alpha*Delta1ATT) * float64(1.05)
+	DefenseThreshold = (myDEF + alpha*Delta1DEF) * float64(1.05)
+
+	return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
 }
 
 // func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
