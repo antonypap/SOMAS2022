@@ -5,6 +5,7 @@ import (
 
 	"infra/game/commons"
 	"math"
+	"sort"
 
 	"infra/game/decision"
 	"infra/game/state"
@@ -13,6 +14,11 @@ import (
 
 	"github.com/benbjohnson/immutable"
 )
+
+type pair struct {
+	id  string
+	val float64
+}
 
 // Handle No Confidence vote
 func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.Intent {
@@ -38,37 +44,28 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 
 func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *decision.ElectionParams) decision.Ballot {
 
-	// Extract ID of alive agents
-	// view := baseAgent.View()
-	// agentState := view.AgentState()
-	// aliveAgentIDs := commons.ImmutableMapKeys(agentState)
-
 	// extract the name of the agents who have submitted manifestos
-	candidates := make([]string, param.CandidateList().Len())
-	i := 0
+	candidateArray := make([]pair, 0, param.CandidateList().Len())
 	iterator := param.CandidateList().Iterator()
 	for !iterator.Done() {
 		id, _, _ := iterator.Next()
-		candidates[i] = id
-		i++
+		val := a.reputationMap[id] + float64(a.socialCap[id])
+		candidateArray = append(candidateArray, pair{id, val})
 	}
-
+	// sort
+	sort.Slice(candidateArray, func(i, j int) bool {
+		return candidateArray[i].val > candidateArray[j].val
+	})
 	// should we vote?
 	makeVote := rand.Intn(100)
 	// if makeVote is lower than personality, then vote.
-	if len(candidates) > 0 && makeVote < a.personality {
+	if len(candidateArray) > 0 && makeVote < a.personality {
 		// Create Ballot
 		var ballot decision.Ballot
 		// number of manifesto preferences we are allowed
 		numCandidate := int(param.NumberOfPreferences())
 		for i := 0; i < numCandidate; i++ {
-			// look at TSN... if any agents in it, extract their manifestos in reputation order and make decision
-			// if no TSN... take manifesto of high reputation agent and evalutate manifesto
-			// evaluation is:
-			// high reputation + low social capital (that doesn't make any sense.....)
-			randomIdx := rand.Intn(len(candidates))
-			randomCandidate := candidates[uint(randomIdx)]
-			ballot = append(ballot, randomCandidate)
+			ballot = append(ballot, candidateArray[i].id)
 		}
 		return ballot
 	} else {
