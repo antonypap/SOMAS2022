@@ -89,7 +89,7 @@ func (a *AgentThree) RequestLootProposal(baseAgent agent.BaseAgent) { // put you
 	}
 	a.mutex.Unlock()
 	// general and send a loot proposal at the start of every turn
-	baseAgent.SendLootProposalToLeader(a.generateLootProposal())
+	baseAgent.SendLootProposalToLeader(a.generateLootProposal(baseAgent))
 }
 
 func (a *AgentThree) HandleLootProposal(_ message.Proposal[decision.LootAction], _ agent.BaseAgent) decision.Intent {
