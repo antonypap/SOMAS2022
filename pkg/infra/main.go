@@ -46,6 +46,7 @@ func main() {
 	dynamicSanction := flag.Bool("dSanc", false, "Toggle dynamic sanctioning")
 	graduatedSanction := flag.Bool("gSanc", false, "Toggle graduated sanctioning")
 	verbose := flag.Bool("verbose", true, "Toggle logger")
+	persistentSanction := flag.Bool("pSanc", false, "Toggles whether sanctions persist across leadership")
 
 	flag.Parse()
 
@@ -57,6 +58,7 @@ func main() {
 	cmdline.CmdLineInits.FixedSanctionDuration = *fixedSanction
 	cmdline.CmdLineInits.DynamicSanctions = *dynamicSanction
 	cmdline.CmdLineInits.GraduatedSanctions = *graduatedSanction
+	cmdline.CmdLineInits.PersistentSanctions = *persistentSanction
 
 	logging.InitLogger(*verbose, *useJSONFormatter, *debug, *id, globalState)
 	initGame()
@@ -71,6 +73,7 @@ func startGameLoop() {
 	*viewPtr = globalState.ToView()
 
 	w, csvFile := initCsvLogging()
+
 	for globalState.CurrentLevel = 1; globalState.CurrentLevel < (gameConfig.NumLevels + 1); globalState.CurrentLevel++ {
 		levelLog := logging.LevelStages{}
 		// Election Stage

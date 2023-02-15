@@ -10,40 +10,10 @@ import (
 	"infra/game/message"
 	"infra/game/message/proposal"
 	"infra/game/state"
+	sanctions "infra/sanctionUtils"
 
 	"github.com/benbjohnson/immutable"
 )
-
-type SanctionActivity struct {
-	sanctionActive bool
-	duration       int
-}
-
-func (s *SanctionActivity) makeSanction(length int) {
-	s.sanctionActive = true
-	s.duration = length
-	if length == 0 {
-		s.sanctionActive = false
-	}
-}
-
-func (s *SanctionActivity) agentIsSanctioned() bool {
-	return s.sanctionActive
-}
-
-func (s *SanctionActivity) updateSanction() {
-	if !s.sanctionActive {
-		return
-	}
-
-	if s.duration > 0 {
-		s.duration--
-	}
-	if s.duration == 0 {
-		s.sanctionActive = false
-	}
-
-}
 
 // Manifesto
 func (a *AgentThree) CreateManifesto(_ agent.BaseAgent) *decision.Manifesto {
@@ -202,16 +172,16 @@ func (a *AgentThree) updateSanctionHistory(agent agent.Agent, sanctionDuration i
 
 func (a *AgentThree) createSanction(agent agent.Agent, length int) {
 	agentId := agent.ID()
-	sanction := SanctionActivity{}
-	sanction.makeSanction(length)
-	if sanction.agentIsSanctioned() {
+	sanction := sanctions.SanctionActivity{}
+	sanction.MakeSanction(length)
+	if sanction.AgentIsSanctioned() {
 		a.activeSanctionMap[agentId] = sanction
 	}
 }
 
-func (a *AgentThree) updateSanctionMap(id commons.ID, sanction SanctionActivity) {
-	sanction.updateSanction()
-	if sanction.agentIsSanctioned() {
+func (a *AgentThree) updateSanctionMap(id commons.ID, sanction sanctions.SanctionActivity) {
+	sanction.UpdateSanction()
+	if sanction.AgentIsSanctioned() {
 		a.activeSanctionMap[id] = sanction
 	} else {
 		delete(a.activeSanctionMap, id)

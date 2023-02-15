@@ -1,11 +1,13 @@
 package team3
 
 import (
+	cmdline "infra/cmdLine"
 	"infra/config"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/decision"
 	"infra/logging"
+	sanctions "infra/sanctionUtils"
 	"math"
 	"sync"
 
@@ -43,7 +45,7 @@ type AgentThree struct {
 	// maps each agent to list of previous sanctions
 	sanctionHistory map[commons.ID]([]int)
 	// tracks if agent is undergoing sanction
-	activeSanctionMap map[commons.ID]SanctionActivity
+	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
 
 	mutex sync.RWMutex
 }
@@ -74,6 +76,13 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 
 		// Init SC (25)
 		a.InitSocialCapital(baseAgent)
+
+		// sloppy global access - consider refactor later
+		// also should be enforced by outer scope (i.e., main.go)
+		// this is the issue with having activeSanctionMap as a local var only
+		if cmdline.CmdLineInits.PersistentSanctions {
+			a.activeSanctionMap = sanctions.GlobalSanctionMap
+		}
 
 	}
 	// fetch total attack and defence
@@ -168,7 +177,7 @@ func NewAgentThreeNeutral() agent.Strategy {
 		alpha:             5,
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
-		activeSanctionMap: make(map[commons.ID]SanctionActivity),
+		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
 	}
 }
@@ -196,7 +205,7 @@ func NewAgentThreePassive() agent.Strategy {
 		alpha:             5,
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
-		activeSanctionMap: make(map[commons.ID]SanctionActivity),
+		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
 	}
 }
@@ -223,7 +232,7 @@ func NewAgentThreeAggressive() agent.Strategy {
 		alpha:             5,
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
-		activeSanctionMap: make(map[commons.ID]SanctionActivity),
+		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
 	}
 }
