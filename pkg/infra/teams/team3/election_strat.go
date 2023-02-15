@@ -9,7 +9,8 @@ import (
 
 	"infra/game/decision"
 	"infra/game/state"
-	"infra/logging"
+
+	// "infra/logging"
 	"math/rand"
 
 	"github.com/benbjohnson/immutable"
@@ -27,14 +28,35 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 
 	if toVote < a.personality {
 		view := baseAgent.View()
-		AS := baseAgent.AgentState()
-		// vote for leader if they have a high reputation
-		baseAgent.Log(logging.Trace, logging.LogField{"hp": AS.Hp, "util": a.utilityScore[view.CurrentLeader()]}, "Util")
-		if a.utilityScore[view.CurrentLeader()] > 5 {
-			return decision.Positive
+		agentState := view.AgentState()
+		ids := commons.ImmutableMapKeys(agentState)
+		// extract agent ids paired with (reputation + social capital) score
+		agentArray := make([]pair, 0, len(ids))
+		for _, id := range ids {
+			val := a.reputationMap[id] + float64(a.socialCap[id])
+			agentArray = append(agentArray, pair{id, val})
+		}
+		// sort
+		sort.Slice(agentArray, func(i, j int) bool {
+			return agentArray[i].val > agentArray[j].val
+		})
+		// extract top agents
+		opinionArray := agentArray[0:20]
+		defectorCount := 0
+		// did top agents defect?
+		for _, pair := range opinionArray {
+			a, _ := agentState.Get(pair.id)
+			if a.Defector.IsDefector() {
+				defectorCount++
+			}
+		}
+		leaderRepSwing := (a.reputationMap[view.CurrentLeader()] - 50) / 10
+		// Should leader reputation allow leaniency?
+		voteNo := defectorCount - int(leaderRepSwing)
+		// if over 50% of top agents defected, then vote no
+		if voteNo > 14 {
+			return decision.Negative
 		} else {
-			// perform no-confidence calculation
-			// return answer
 			return decision.Positive
 		}
 	} else {
