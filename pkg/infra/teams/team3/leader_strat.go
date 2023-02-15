@@ -10,44 +10,10 @@ import (
 	"infra/game/message"
 	"infra/game/message/proposal"
 	"infra/game/state"
+	sanctions "infra/sanctionUtils"
 
 	"github.com/benbjohnson/immutable"
 )
-
-type SanctionActivity struct {
-	sanctionActive bool
-	duration       int
-}
-
-func (s *SanctionActivity) makeSanction(length int) {
-	s.sanctionActive = true
-	s.duration = length
-	if length == 0 {
-		s.sanctionActive = false
-	}
-}
-
-func (s *SanctionActivity) initialiseSanction() {
-	s.sanctionActive = false
-	s.duration = 0
-}
-
-func (s *SanctionActivity) agentIsSanctioned() bool {
-	return s.sanctionActive
-}
-
-func (s *SanctionActivity) updateSanction() {
-	if !s.sanctionActive {
-		return
-	}
-
-	if s.duration > 0 {
-		s.duration--
-	} else {
-		s.sanctionActive = false
-	}
-
-}
 
 // Manifesto
 func (a *AgentThree) CreateManifesto(_ agent.BaseAgent) *decision.Manifesto {
@@ -206,9 +172,20 @@ func (a *AgentThree) updateSanctionHistory(agent agent.Agent, sanctionDuration i
 
 func (a *AgentThree) createSanction(agent agent.Agent, length int) {
 	agentId := agent.ID()
-	sanction := SanctionActivity{}
-	sanction.makeSanction(length)
-	a.activeSanctionMap[agentId] = sanction
+	sanction := sanctions.SanctionActivity{}
+	sanction.MakeSanction(length)
+	if sanction.AgentIsSanctioned() {
+		a.activeSanctionMap[agentId] = sanction
+	}
+}
+
+func (a *AgentThree) updateSanctionMap(id commons.ID, sanction sanctions.SanctionActivity) {
+	sanction.UpdateSanction()
+	if sanction.AgentIsSanctioned() {
+		a.activeSanctionMap[id] = sanction
+	} else {
+		delete(a.activeSanctionMap, id)
+	}
 }
 
 func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[commons.ID]agent.Agent {
@@ -218,10 +195,9 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 	pruned := make(map[commons.ID]agent.Agent)
 	for id, agent := range agentMap {
 
-		currentSanction := a.activeSanctionMap[id]
-		if currentSanction.agentIsSanctioned() {
-			currentSanction.updateSanction()
-			a.activeSanctionMap[id] = currentSanction
+		currentSanction, sanctionExists := a.activeSanctionMap[id]
+		if sanctionExists {
+			a.updateSanctionMap(id, currentSanction)
 			continue
 		}
 
@@ -243,6 +219,11 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 			a.createSanction(agent, sanctionDuration)
 			// update agent's sanction history
 			a.updateSanctionHistory(agent, sanctionDuration)
+
+			// edge case for 0-length sanction
+			if sanctionDuration == 0 {
+				pruned[id] = agent
+			}
 
 		}
 	}

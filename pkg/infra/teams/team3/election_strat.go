@@ -30,7 +30,6 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 		view := baseAgent.View()
 		agentState := view.AgentState()
 		ids := commons.ImmutableMapKeys(agentState)
-		opinionArray := make([]pair, 0)
 		// extract agent ids paired with (reputation + social capital) score
 		agentArray := make([]pair, 0, len(ids))
 		for _, id := range ids {
@@ -41,6 +40,7 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 		sort.Slice(agentArray, func(i, j int) bool {
 			return agentArray[i].val > agentArray[j].val
 		})
+		var opinionArray []pair
 		// extract top agents
 		if len(agentArray) < 20 {
 			opinionArray = agentArray
@@ -226,14 +226,6 @@ func (a *AgentThree) InitSocialCapital(baseAgent agent.BaseAgent) {
 		id, _, _ := itr.Next()
 
 		a.socialCap[id] = 25
-	}
-}
-
-func (a *AgentThree) initSanctionMap(view immutable.Map[string, state.HiddenAgentState]) {
-	for _, id := range commons.ImmutableMapKeys(view) {
-		sanction := SanctionActivity{}
-		sanction.initialiseSanction()
-		a.activeSanctionMap[id] = sanction
 	}
 }
 
