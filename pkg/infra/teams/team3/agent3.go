@@ -75,8 +75,6 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 		// Init SC (25)
 		a.InitSocialCapital(baseAgent)
 
-		// Init sanctions
-		a.initSanctionMap(viewAS)
 	}
 	// fetch total attack and defence
 	a.AT = int(AS.Attack + AS.BonusAttack())
