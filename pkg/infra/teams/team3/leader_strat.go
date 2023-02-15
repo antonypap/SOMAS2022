@@ -52,7 +52,7 @@ func (a *AgentThree) CreateManifesto(_ agent.BaseAgent) *decision.Manifesto {
 	submitManifesto := rand.Intn(100)
 	if submitManifesto < a.personality {
 		// Enter manifesto logic here for creating a manifesto
-		manifesto := decision.NewManifesto(false, false, 10, 50)
+		manifesto := decision.NewManifesto(false, false, 30, 50)
 		return manifesto
 	} else {
 		// submit a manifesto with a term length of 0
