@@ -56,7 +56,7 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 				defectorCount++
 			}
 		}
-		leaderRepSwing := (a.reputationMap[view.CurrentLeader()] - 50) / 10
+		leaderRepSwing := (a.reputationMap[view.CurrentLeader()] - 30) / 10
 		// Should leader reputation allow leaniency?
 		voteNo := defectorCount - int(leaderRepSwing)
 		// if over 50% of top agents defected, then vote no
