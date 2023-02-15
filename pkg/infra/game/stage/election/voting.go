@@ -25,7 +25,7 @@ import (
 	7. Copeland Scoring
 */
 
-func singleChoicePlurality(ballots []decision.Ballot) commons.ID {
+func singleChoicePlurality(ballots []decision.Ballot, allAgents []commons.ID) commons.ID {
 	// Count number of votes collected for each candidate
 	votes := make(map[commons.ID]uint)
 
@@ -50,7 +50,14 @@ func singleChoicePlurality(ballots []decision.Ballot) commons.ID {
 
 	// Randomly choose one if there are more than one winner
 	var winner commons.ID
-	if len(winners) > 1 {
+	if len(winners) == 0 {
+		logging.Log(
+			logging.Info,
+			nil,
+			"No votes cast. Random agent selected as leader",
+		)
+		return allAgents[0]
+	} else if len(winners) > 1 {
 		logging.Log(
 			logging.Info,
 			logging.LogField{"winners": winners},
