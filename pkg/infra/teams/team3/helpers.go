@@ -204,3 +204,31 @@ func minMax4(isMax bool, nums [4]float64) float64 {
 	}
 	return ans
 }
+
+func (a *AgentThree) getGroupAvStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
+	groupAvHP := AverageArray(GetHealthAllAgents(baseAgent))
+	groupAvST := AverageArray(GetStaminaAllAgents(baseAgent))
+	groupAvATT := AverageArray(GetAttackAllAgents(baseAgent))
+	groupAvDEF := AverageArray(GetDefenceAllAgents(baseAgent))
+
+	return groupAvHP, groupAvST, groupAvATT, groupAvDEF
+}
+
+func (a *AgentThree) getMyStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
+	agentState := baseAgent.AgentState()
+	myHP := float64(agentState.Hp)
+	myST := float64(agentState.Stamina)
+	myATT := float64(agentState.Attack)
+	myDEF := float64(agentState.Defense)
+
+	return myHP, myST, myATT, myDEF
+}
+
+func (a *AgentThree) getTSNAvStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
+	TSNavHP := AverageArray(GetHealthTSN(baseAgent, a.TSN))
+	TSNavST := AverageArray(GetStaminaTSN(baseAgent, a.TSN))
+	TSNavATT := AverageArray(GetAttackTSN(baseAgent, a.TSN))
+	TSNavDEF := AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+
+	return TSNavHP, TSNavST, TSNavATT, TSNavDEF
+}
