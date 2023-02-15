@@ -3,7 +3,7 @@ import json
 
 OUTPUT_FILE_LOCATION = "./output/output.json"
 RUN_COMMAND = "go run ./pkg/infra "
-NUM_ITERATIONS = 1
+NUM_ITERATIONS = 5
 
 
 def parseJSON(data):
@@ -12,11 +12,12 @@ def parseJSON(data):
 
 
 def fixedLength():
+    max_sanction_duration = 10
     duration_comp = []
-    for duration in range(0, 2):
+    for duration in range(0, max_sanction_duration + 1):
         avg_level_reached = 0
         for _ in range(NUM_ITERATIONS):
-            os.system(RUN_COMMAND + f"-fSanc={duration}")
+            os.system(RUN_COMMAND + f"-fSanc={duration} -verbose=false")
 
             with open(OUTPUT_FILE_LOCATION) as OUTPUT_JSON:
                 DATA = json.load(OUTPUT_JSON)
@@ -28,11 +29,14 @@ def fixedLength():
     for duration, score in enumerate(duration_comp):
         print(f"duration:{duration}, score:{score}")
 
+
 def dynamic():
     return
 
+
 def graduated():
     return
+
 
 if __name__ == "__main__":
     fixedLength()
