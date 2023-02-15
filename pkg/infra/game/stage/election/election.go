@@ -56,7 +56,7 @@ func HandleElection(state *state.State, agents map[commons.ID]agent.Agent, strat
 
 	switch strategy {
 	case decision.VotingStrategy(decision.SingleChoicePlurality):
-		winningID := singleChoicePlurality(ballots)
+		winningID := singleChoicePlurality(ballots, agentIDs)
 		winningManifesto := agentManifestos[winningID]
 
 		return winningID, winningManifesto
@@ -67,7 +67,7 @@ func HandleElection(state *state.State, agents map[commons.ID]agent.Agent, strat
 
 		return winningID, winningManifesto
 	default:
-		winningID := singleChoicePlurality(ballots)
+		winningID := singleChoicePlurality(ballots, agentIDs)
 		winningManifesto := agentManifestos[winningID]
 
 		return winningID, winningManifesto

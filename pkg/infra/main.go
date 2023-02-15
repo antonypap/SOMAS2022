@@ -18,6 +18,7 @@ import (
 	"infra/logging"
 	"infra/teams/team3"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/benbjohnson/immutable"
@@ -228,6 +229,7 @@ func startGameLoop() {
 
 		lootPool := generateLootPool(uint(len(agentMap)))
 		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
+		fmt.Println(len(prunedAgentMap))
 		// fmt.Println("PRUNED: ", prunedAgentMap)
 		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, agentMap, channelsMap)
 		lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
@@ -251,7 +253,10 @@ func startGameLoop() {
 		// TODO: End of level Updates
 		termLeft--
 		globalState.MonsterHealth, globalState.MonsterAttack = gamemath.GetNextLevelMonsterValues(*gameConfig, globalState.CurrentLevel+1)
+		mutex := sync.RWMutex{}
+		mutex.Lock()
 		*viewPtr = globalState.ToView()
+		mutex.Unlock()
 		logging.Log(logging.Info, nil, fmt.Sprintf("------------------------------ Level %d Ended ----------------------------", globalState.CurrentLevel))
 
 		immutableFightRounds := commons.NewImmutableList(fightResultSlice)

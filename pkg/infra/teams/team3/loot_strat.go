@@ -81,12 +81,15 @@ func (a *AgentThree) HandleLootInformation(m message.TaggedInformMessage[message
 
 // forcibly call at start of loot phase to begin proceedings
 func (a *AgentThree) RequestLootProposal(baseAgent agent.BaseAgent) { // put your logic here now, instead
+	a.mutex.Lock()
 	sendProposal := rand.Intn(100)
 	if sendProposal > a.personality {
+		a.mutex.Unlock()
 		return
 	}
-	// generate and send a loot proposal at the start of every turn
-	baseAgent.SendLootProposalToLeader(a.generateLootProposal(baseAgent))
+	a.mutex.Unlock()
+	// general and send a loot proposal at the start of every turn
+	baseAgent.SendLootProposalToLeader(a.generateLootProposal())
 }
 
 func (a *AgentThree) HandleLootProposal(_ message.Proposal[decision.LootAction], _ agent.BaseAgent) decision.Intent {
