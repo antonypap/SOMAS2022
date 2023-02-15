@@ -109,31 +109,31 @@ func (a *AgentThree) HandleLootProposal(_ message.Proposal[decision.LootAction],
 
 func (a *AgentThree) generateLootProposal(baseAgent agent.BaseAgent) commons.ImmutableList[proposal.Rule[decision.LootAction]] {
 	rules := make([]proposal.Rule[decision.LootAction], 0)
-	HpPotionThresh, StPotionThresh, SwordThresh, ShieldThresh := a.LootThresholdDecision(baseAgent)
+	thresholdValues := a.LootThresholdDecision(baseAgent)
 
 	// health potion rule
 	rules = append(rules, *proposal.NewRule(decision.HealthPotion,
-		proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh))))
+		proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(thresholdValues.Health))))
 	// weapon rules
 	rules = append(rules, *proposal.NewRule(decision.Weapon,
-		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh)),
-			*proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(SwordThresh)),
+		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(thresholdValues.Health)),
+			*proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(thresholdValues.Attack)),
 		)))
 	// stamina potion rule
 	rules = append(rules, *proposal.NewRule(decision.StaminaPotion,
-		proposal.NewComparativeCondition(proposal.Stamina, proposal.LessThan, uint(StPotionThresh))))
+		proposal.NewComparativeCondition(proposal.Stamina, proposal.LessThan, uint(thresholdValues.Stamina))))
 	// shield rules
 	rules = append(rules, *proposal.NewRule(decision.Shield,
-		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(HpPotionThresh)),
-			*proposal.NewComparativeCondition(proposal.TotalAttack, proposal.LessThan, uint(ShieldThresh)),
+		proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.LessThan, uint(thresholdValues.Health)),
+			*proposal.NewComparativeCondition(proposal.TotalDefence, proposal.LessThan, uint(thresholdValues.Defence)),
 		)))
 
 	return *commons.NewImmutableList(rules)
 }
 
 // determin loot thresholds
-func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
-	HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold := 0.0, 0.0, 0.0, 0.0
+func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdVals {
+	var thresholds thresholdVals
 	// initiate modifers
 	alpha := 0.2
 	beta := 0.1
@@ -157,20 +157,20 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, 
 		Delta2ATT := groupAvStats.Attack - TSNavStats.Attack
 		Delta2DEF := groupAvStats.Defence - TSNavStats.Defence
 
-		HPThreshold = myStats.Health + alpha*Delta1HP + beta*Delta2HP
-		StaminaThreshold = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
-		AttackThreshold = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
-		DefenseThreshold = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
+		thresholds.Health = myStats.Health + alpha*Delta1HP + beta*Delta2HP
+		thresholds.Stamina = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
+		thresholds.Attack = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
+		thresholds.Defence = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
 
-		return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
+		return thresholds
 	}
 	// caluclate the thresholds (for all the decisions)
-	HPThreshold = (myStats.Health + alpha*Delta1HP) * float64(1.02)
-	StaminaThreshold = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
-	AttackThreshold = (myStats.Attack + alpha*Delta1ATT) * float64(1.05)
-	DefenseThreshold = (myStats.Defence + alpha*Delta1DEF) * float64(1.05)
+	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(1.02)
+	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
+	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(1.05)
+	thresholds.Defence = (myStats.Defence + alpha*Delta1DEF) * float64(1.05)
 
-	return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
+	return thresholds
 }
 
 // func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,

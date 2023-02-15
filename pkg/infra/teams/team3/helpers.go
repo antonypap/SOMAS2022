@@ -18,6 +18,13 @@ type averageStats struct {
 	Defence float64
 }
 
+type thresholdVals struct {
+	Health  float64
+	Stamina float64
+	Attack  float64
+	Defence float64
+}
+
 func GetHealthAllAgents(baseAgent agent.BaseAgent) []float64 {
 	view := baseAgent.View()
 	agentState := view.AgentState()
