@@ -71,7 +71,7 @@ func InitAgents(
 
 	for agentName, strategy := range defaultStrategyMap {
 		expectedEnvName := "AGENT_" + agentName + "_QUANTITY"
-		quantity := config.EnvToUint(expectedEnvName, 100)
+		quantity := config.EnvToUint(expectedEnvName, 30)
 
 		numAgents += quantity
 		InstantiateAgent(gameConfig, agentMap, agentStateMap, quantity, strategy, agentName, ptr)

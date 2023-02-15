@@ -5,14 +5,21 @@ import (
 
 	"infra/game/commons"
 	"math"
+	"sort"
 
 	"infra/game/decision"
 	"infra/game/state"
-	"infra/logging"
+
+	// "infra/logging"
 	"math/rand"
 
 	"github.com/benbjohnson/immutable"
 )
+
+type pair struct {
+	id  string
+	val float64
+}
 
 // Handle No Confidence vote
 func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.Intent {
@@ -21,14 +28,41 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 
 	if toVote < a.personality {
 		view := baseAgent.View()
-		AS := baseAgent.AgentState()
-		// vote for leader if they have a high reputation
-		baseAgent.Log(logging.Trace, logging.LogField{"hp": AS.Hp, "util": a.utilityScore[view.CurrentLeader()]}, "Util")
-		if a.utilityScore[view.CurrentLeader()] > 5 {
-			return decision.Positive
+		agentState := view.AgentState()
+		ids := commons.ImmutableMapKeys(agentState)
+		opinionArray := make([]pair, 0)
+		// extract agent ids paired with (reputation + social capital) score
+		agentArray := make([]pair, 0, len(ids))
+		for _, id := range ids {
+			val := a.reputationMap[id] + float64(a.socialCap[id])
+			agentArray = append(agentArray, pair{id, val})
+		}
+		// sort
+		sort.Slice(agentArray, func(i, j int) bool {
+			return agentArray[i].val > agentArray[j].val
+		})
+		// extract top agents
+		if len(agentArray) < 20 {
+			opinionArray = agentArray
 		} else {
-			// perform no-confidence calculation
-			// return answer
+			opinionArray = agentArray[0:20]
+		}
+
+		defectorCount := 0
+		// did top agents defect?
+		for _, pair := range opinionArray {
+			a, _ := agentState.Get(pair.id)
+			if a.Defector.IsDefector() {
+				defectorCount++
+			}
+		}
+		leaderRepSwing := (a.reputationMap[view.CurrentLeader()] - 30) / 10
+		// Should leader reputation allow leaniency?
+		voteNo := defectorCount - int(leaderRepSwing)
+		// if over 50% of top agents defected, then vote no
+		if voteNo > int((0.7 * float64(len(opinionArray)))) {
+			return decision.Negative
+		} else {
 			return decision.Positive
 		}
 	} else {
@@ -38,37 +72,28 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 
 func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *decision.ElectionParams) decision.Ballot {
 
-	// Extract ID of alive agents
-	// view := baseAgent.View()
-	// agentState := view.AgentState()
-	// aliveAgentIDs := commons.ImmutableMapKeys(agentState)
-
 	// extract the name of the agents who have submitted manifestos
-	candidates := make([]string, param.CandidateList().Len())
-	i := 0
+	candidateArray := make([]pair, 0, param.CandidateList().Len())
 	iterator := param.CandidateList().Iterator()
 	for !iterator.Done() {
 		id, _, _ := iterator.Next()
-		candidates[i] = id
-		i++
+		val := a.reputationMap[id] + float64(a.socialCap[id])
+		candidateArray = append(candidateArray, pair{id, val})
 	}
-
+	// sort
+	sort.Slice(candidateArray, func(i, j int) bool {
+		return candidateArray[i].val > candidateArray[j].val
+	})
 	// should we vote?
 	makeVote := rand.Intn(100)
 	// if makeVote is lower than personality, then vote.
-	if len(candidates) > 0 && makeVote < a.personality {
+	if len(candidateArray) > 0 && makeVote < a.personality {
 		// Create Ballot
 		var ballot decision.Ballot
 		// number of manifesto preferences we are allowed
 		numCandidate := int(param.NumberOfPreferences())
 		for i := 0; i < numCandidate; i++ {
-			// look at TSN... if any agents in it, extract their manifestos in reputation order and make decision
-			// if no TSN... take manifesto of high reputation agent and evalutate manifesto
-			// evaluation is:
-			// high reputation + low social capital (that doesn't make any sense.....)
-			randomIdx := rand.Intn(len(candidates))
-			randomCandidate := candidates[uint(randomIdx)]
-			ballot = append(ballot, randomCandidate)
+			ballot = append(ballot, candidateArray[i].id)
 		}
 		return ballot
 	} else {

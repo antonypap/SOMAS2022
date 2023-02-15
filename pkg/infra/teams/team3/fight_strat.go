@@ -67,7 +67,7 @@ func (a *AgentThree) FightActionNoProposal(baseAgent agent.BaseAgent) decision.F
 func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[message.FightInform], baseAgent agent.BaseAgent, fightactionMap *immutable.Map[commons.ID, decision.FightAction]) {
 	id := baseAgent.ID()
 	choice, _ := fightactionMap.Get(id)
-	HPThreshold, StaminaThreshold, _, DefenseThreshold := a.thresholdDecision(baseAgent, choice)
+	thresholdValues := a.thresholdDecision(baseAgent, choice)
 	// fmt.Println(m)
 
 	// should i make a proposal (based on personality)
@@ -77,15 +77,25 @@ func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[messag
 	if makesProposal < a.personality {
 		rules := make([]proposal.Rule[decision.FightAction], 0)
 
+		// fight rule HT AND ST condition
 		rules = append(rules, *proposal.NewRule(decision.Attack,
-			proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, uint(HPThreshold)),
-				*proposal.NewComparativeCondition(proposal.Stamina, proposal.GreaterThan, uint(StaminaThreshold))),
+			proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, uint(thresholdValues.Health)),
+				*proposal.NewComparativeCondition(proposal.Stamina, proposal.GreaterThan, uint(thresholdValues.Stamina))),
 		))
-
+		// fight rule ATT condition
+		rules = append(rules, *proposal.NewRule(decision.Attack,
+			proposal.NewComparativeCondition(proposal.TotalAttack, proposal.GreaterThan, uint(thresholdValues.Attack)),
+		))
+		// defend rule HP AND ST condition
 		rules = append(rules, *proposal.NewRule(decision.Defend,
-			proposal.NewComparativeCondition(proposal.TotalDefence, proposal.GreaterThan, uint(DefenseThreshold)),
+			proposal.NewAndCondition(*proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, uint(thresholdValues.Health)),
+				*proposal.NewComparativeCondition(proposal.Stamina, proposal.GreaterThan, uint(thresholdValues.Stamina))),
 		))
-
+		// defend rule DEF condition
+		rules = append(rules, *proposal.NewRule(decision.Defend,
+			proposal.NewComparativeCondition(proposal.TotalDefence, proposal.GreaterThan, uint(thresholdValues.Defence)),
+		))
+		// COWER condition (as low as possible)
 		rules = append(rules, *proposal.NewRule(decision.Cower,
 			proposal.NewComparativeCondition(proposal.Health, proposal.GreaterThan, 1),
 		))
@@ -159,63 +169,45 @@ func (a *AgentThree) HandleFightProposal(m message.Proposal[decision.FightAction
 	}
 }
 
-func (a *AgentThree) thresholdDecision(baseAgent agent.BaseAgent, choice decision.FightAction) (float64, float64, float64, float64) {
-	// view := baseAgent.View()
-	// agentState := baseAgent.AgentState()
-	HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold := 0.0, 0.0, 0.0, 0.0
+func (a *AgentThree) thresholdDecision(baseAgent agent.BaseAgent, choice decision.FightAction) thresholdVals {
+	var thresholds thresholdVals
+	// initiate modifers
+	alpha := 0.2
+	beta := 0.1
+	// get my stats
+	myStats := a.getMyStats(baseAgent)
+	// get group stats
+	groupAvStats := a.getGroupAvStats(baseAgent)
 
-	// var agentFought bool = false
+	// get differences (group to me)
+	Delta1HP := groupAvStats.Health - float64(myStats.Health)
+	Delta1ST := groupAvStats.Stamina - float64(myStats.Stamina)
+	Delta1ATT := groupAvStats.Attack - float64(myStats.Attack)
+	Delta1DEF := groupAvStats.Defence - float64(myStats.Defence)
 
-	// // iterate until we get most recent history
-	// i := 0
-	// itr := a.fightRoundsHistory.Iterator()
-	// for !itr.Done() {
-	// 	res, _ := itr.Next()
-	// 	i += 1
+	if len(a.TSN) > 0 {
+		// get TSN average stats
+		TSNavStats := a.getTSNAvStats(baseAgent)
+		// get differences (group to TSN)
+		Delta2HP := groupAvStats.Health - TSNavStats.Health
+		Delta2ST := groupAvStats.Stamina - TSNavStats.Stamina
+		Delta2ATT := groupAvStats.Attack - TSNavStats.Attack
+		Delta2DEF := groupAvStats.Defence - TSNavStats.Defence
 
-	// 	if i == a.fightRoundsHistory.Len()-1 {
-	// 		agents := res.AttackingAgents()
-	// 		itr2 := agents.Iterator()
-	// 		// search for our agent in fight list
-	// 		for !itr.Done() {
-	// 			_, attackingAgentID := itr2.Next()
-	// 			if attackingAgentID == baseAgent.ID() {
-	// 				agentFought = true
-	// 			}
-	// 		}
-	// 	}
-	// }
+		thresholds.Health = myStats.Health + alpha*Delta1HP + beta*Delta2HP
+		thresholds.Stamina = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
+		thresholds.Attack = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
+		thresholds.Defence = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
 
-	// if choice == decision.Cower {
-	// 	if agentState.Hp >= uint(AverageArray(GetHealthAllAgents(baseAgent))) {
-	// 		HPThreshold1 = 1.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-	// 	if agentState.Stamina >= uint(AverageArray(GetStaminaAllAgents(baseAgent))) {
-	// 		StaminaThreshold1 = 1.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
+		return thresholds
+	}
+	// caluclate the thresholds (for all the decisions)
+	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(0.98)
+	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(0.98)
+	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(0.98)
+	thresholds.Defence = (myStats.Defence + alpha*Delta1DEF) * float64(0.98)
 
-	// 	if agentState.Hp < uint(AverageArray(GetHealthAllAgents(baseAgent))) {
-	// 		HPThreshold1 = 0.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-	// 	if agentState.Stamina < uint(AverageArray(GetStaminaAllAgents(baseAgent))) {
-	// 		StaminaThreshold1 = 0.7 * AverageArray(GetHealthAllAgents(baseAgent))
-	// 	}
-
-	// 	AttackThreshold1 = 1.1 * AverageArray(GetAttackAllAgents(baseAgent))
-	// 	DefenseThreshold1 = 1.1 * AverageArray(GetDefenceAllAgents(baseAgent))
-	// }
-
-	HPThreshold = 0.85 * AverageArray(GetHealthAllAgents(baseAgent))
-	StaminaThreshold = 0.85 * AverageArray(GetHealthAllAgents(baseAgent))
-	AttackThreshold = 0.4 * AverageArray(GetAttackAllAgents(baseAgent))
-	DefenseThreshold = 0.9 * AverageArray(GetDefenceAllAgents(baseAgent))
-	// else {
-	// 	HPThreshold1 = 500.0
-	// 	StaminaThreshold1 = 500.0
-	// 	AttackThreshold1 = 10.0
-	// 	DefenseThreshold1 = 20.0
-	// }
-	return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
+	return thresholds
 }
 
 func (a *AgentThree) HandleUpdateWeapon(baseAgent agent.BaseAgent) decision.ItemIdx {

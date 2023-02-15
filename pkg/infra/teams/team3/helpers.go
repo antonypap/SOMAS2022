@@ -11,6 +11,20 @@ import (
 	"strconv"
 )
 
+type averageStats struct {
+	Health  float64
+	Stamina float64
+	Attack  float64
+	Defence float64
+}
+
+type thresholdVals struct {
+	Health  float64
+	Stamina float64
+	Attack  float64
+	Defence float64
+}
+
 func GetHealthAllAgents(baseAgent agent.BaseAgent) []float64 {
 	view := baseAgent.View()
 	agentState := view.AgentState()
@@ -64,6 +78,54 @@ func GetDefenceAllAgents(baseAgent agent.BaseAgent) []float64 {
 		agentStaminaMap = append(agentStaminaMap, float64(state.Defense))
 	}
 	return agentStaminaMap
+}
+
+func GetHealthTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNhealthMap []float64
+	// loop through TSN and extract HP
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNhealthMap = append(TSNhealthMap, float64(hiddenState.Hp))
+	}
+	return TSNhealthMap
+}
+
+func GetStaminaTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNstaminaMap []float64
+	// loop through TSN and extract Stamina
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNstaminaMap = append(TSNstaminaMap, float64(hiddenState.Stamina))
+	}
+	return TSNstaminaMap
+}
+
+func GetAttackTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNattackMap []float64
+	// loop through TSN and extract Attack
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNattackMap = append(TSNattackMap, float64(hiddenState.Attack))
+	}
+	return TSNattackMap
+}
+
+func GetDefenceTSN(baseAgent agent.BaseAgent, TSN []commons.ID) []float64 {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	var TSNdefenceMap []float64
+	// loop through TSN and extract Defense
+	for _, id := range TSN {
+		hiddenState, _ := agentState.Get(id)
+		TSNdefenceMap = append(TSNdefenceMap, float64(hiddenState.Defense))
+	}
+	return TSNdefenceMap
 }
 
 // func (a *AgentThree) FightTSN(agentMap *immutable.Map[commons.ID, state.HiddenAgentState]) {
@@ -155,4 +217,38 @@ func minMax4(isMax bool, nums [4]float64) float64 {
 		}
 	}
 	return ans
+}
+
+func (a *AgentThree) getGroupAvStats(baseAgent agent.BaseAgent) averageStats {
+	var avStats averageStats
+
+	avStats.Health = AverageArray(GetHealthAllAgents(baseAgent))
+	avStats.Stamina = AverageArray(GetStaminaAllAgents(baseAgent))
+	avStats.Attack = AverageArray(GetAttackAllAgents(baseAgent))
+	avStats.Defence = AverageArray(GetDefenceAllAgents(baseAgent))
+
+	return avStats
+}
+
+func (a *AgentThree) getMyStats(baseAgent agent.BaseAgent) averageStats {
+	agentState := baseAgent.AgentState()
+	var avStats averageStats
+
+	avStats.Health = float64(agentState.Hp)
+	avStats.Stamina = float64(agentState.Stamina)
+	avStats.Attack = float64(agentState.Attack)
+	avStats.Defence = float64(agentState.Defense)
+
+	return avStats
+}
+
+func (a *AgentThree) getTSNAvStats(baseAgent agent.BaseAgent) averageStats {
+	var avStats averageStats
+
+	avStats.Health = AverageArray(GetHealthTSN(baseAgent, a.TSN))
+	avStats.Stamina = AverageArray(GetStaminaTSN(baseAgent, a.TSN))
+	avStats.Attack = AverageArray(GetAttackTSN(baseAgent, a.TSN))
+	avStats.Defence = AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+
+	return avStats
 }
