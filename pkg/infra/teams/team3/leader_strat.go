@@ -22,6 +22,9 @@ type SanctionActivity struct {
 func (s *SanctionActivity) makeSanction(length int) {
 	s.sanctionActive = true
 	s.duration = length
+	if length == 0 {
+		s.sanctionActive = false
+	}
 }
 
 func (s *SanctionActivity) initialiseSanction() {
