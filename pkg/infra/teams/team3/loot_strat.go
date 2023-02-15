@@ -137,18 +137,10 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, 
 	// initiate modifers
 	alpha := 0.2
 	beta := 0.1
-	// extract agents
-	agentState := baseAgent.AgentState()
 	// get my stats
-	myHP := float64(agentState.Hp)
-	myST := float64(agentState.Stamina)
-	myATT := float64(agentState.Attack)
-	myDEF := float64(agentState.Defense)
+	myHP, myST, myATT, myDEF := a.getMyStats(baseAgent)
 	// get group stats
-	groupAvHP := AverageArray(GetHealthAllAgents(baseAgent))
-	groupAvST := AverageArray(GetStaminaAllAgents(baseAgent))
-	groupAvATT := AverageArray(GetAttackAllAgents(baseAgent))
-	groupAvDEF := AverageArray(GetDefenceAllAgents(baseAgent))
+	groupAvHP, groupAvST, groupAvATT, groupAvDEF := a.getGroupAvStats(baseAgent)
 
 	// get differences (group to me)
 	Delta1HP := groupAvHP - float64(myHP)
@@ -158,10 +150,7 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, 
 
 	if len(a.TSN) > 0 {
 		// get TSN average stats
-		TSNavHP := AverageArray(GetHealthTSN(baseAgent, a.TSN))
-		TSNavST := AverageArray(GetStaminaTSN(baseAgent, a.TSN))
-		TSNavATT := AverageArray(GetAttackTSN(baseAgent, a.TSN))
-		TSNavDEF := AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+		TSNavHP, TSNavST, TSNavATT, TSNavDEF := a.getTSNAvStats(baseAgent)
 		// get differences (group to TSN)
 		Delta2HP := groupAvHP - TSNavHP
 		Delta2ST := groupAvST - TSNavST
