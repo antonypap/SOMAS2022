@@ -30,6 +30,7 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 		view := baseAgent.View()
 		agentState := view.AgentState()
 		ids := commons.ImmutableMapKeys(agentState)
+		opinionArray := make([]pair, 0)
 		// extract agent ids paired with (reputation + social capital) score
 		agentArray := make([]pair, 0, len(ids))
 		for _, id := range ids {
@@ -41,7 +42,12 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 			return agentArray[i].val > agentArray[j].val
 		})
 		// extract top agents
-		opinionArray := agentArray[0:20]
+		if len(agentArray) < 20 {
+			opinionArray = agentArray
+		} else {
+			opinionArray = agentArray[0:20]
+		}
+
 		defectorCount := 0
 		// did top agents defect?
 		for _, pair := range opinionArray {
@@ -54,7 +60,7 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 		// Should leader reputation allow leaniency?
 		voteNo := defectorCount - int(leaderRepSwing)
 		// if over 50% of top agents defected, then vote no
-		if voteNo > 14 {
+		if voteNo > int((0.7 * float64(len(opinionArray)))) {
 			return decision.Negative
 		} else {
 			return decision.Positive
