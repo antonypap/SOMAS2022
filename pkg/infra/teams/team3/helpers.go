@@ -11,6 +11,13 @@ import (
 	"strconv"
 )
 
+type averageStats struct {
+	Health  float64
+	Stamina float64
+	Attack  float64
+	Defence float64
+}
+
 func GetHealthAllAgents(baseAgent agent.BaseAgent) []float64 {
 	view := baseAgent.View()
 	agentState := view.AgentState()
@@ -205,30 +212,36 @@ func minMax4(isMax bool, nums [4]float64) float64 {
 	return ans
 }
 
-func (a *AgentThree) getGroupAvStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
-	groupAvHP := AverageArray(GetHealthAllAgents(baseAgent))
-	groupAvST := AverageArray(GetStaminaAllAgents(baseAgent))
-	groupAvATT := AverageArray(GetAttackAllAgents(baseAgent))
-	groupAvDEF := AverageArray(GetDefenceAllAgents(baseAgent))
+func (a *AgentThree) getGroupAvStats(baseAgent agent.BaseAgent) averageStats {
+	var avStats averageStats
 
-	return groupAvHP, groupAvST, groupAvATT, groupAvDEF
+	avStats.Health = AverageArray(GetHealthAllAgents(baseAgent))
+	avStats.Stamina = AverageArray(GetStaminaAllAgents(baseAgent))
+	avStats.Attack = AverageArray(GetAttackAllAgents(baseAgent))
+	avStats.Defence = AverageArray(GetDefenceAllAgents(baseAgent))
+
+	return avStats
 }
 
-func (a *AgentThree) getMyStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
+func (a *AgentThree) getMyStats(baseAgent agent.BaseAgent) averageStats {
 	agentState := baseAgent.AgentState()
-	myHP := float64(agentState.Hp)
-	myST := float64(agentState.Stamina)
-	myATT := float64(agentState.Attack)
-	myDEF := float64(agentState.Defense)
+	var avStats averageStats
 
-	return myHP, myST, myATT, myDEF
+	avStats.Health = float64(agentState.Hp)
+	avStats.Stamina = float64(agentState.Stamina)
+	avStats.Attack = float64(agentState.Attack)
+	avStats.Defence = float64(agentState.Defense)
+
+	return avStats
 }
 
-func (a *AgentThree) getTSNAvStats(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
-	TSNavHP := AverageArray(GetHealthTSN(baseAgent, a.TSN))
-	TSNavST := AverageArray(GetStaminaTSN(baseAgent, a.TSN))
-	TSNavATT := AverageArray(GetAttackTSN(baseAgent, a.TSN))
-	TSNavDEF := AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+func (a *AgentThree) getTSNAvStats(baseAgent agent.BaseAgent) averageStats {
+	var avStats averageStats
 
-	return TSNavHP, TSNavST, TSNavATT, TSNavDEF
+	avStats.Health = AverageArray(GetHealthTSN(baseAgent, a.TSN))
+	avStats.Stamina = AverageArray(GetStaminaTSN(baseAgent, a.TSN))
+	avStats.Attack = AverageArray(GetAttackTSN(baseAgent, a.TSN))
+	avStats.Defence = AverageArray(GetDefenceTSN(baseAgent, a.TSN))
+
+	return avStats
 }

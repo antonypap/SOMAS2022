@@ -138,37 +138,37 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) (float64, 
 	alpha := 0.2
 	beta := 0.1
 	// get my stats
-	myHP, myST, myATT, myDEF := a.getMyStats(baseAgent)
+	myStats := a.getMyStats(baseAgent)
 	// get group stats
-	groupAvHP, groupAvST, groupAvATT, groupAvDEF := a.getGroupAvStats(baseAgent)
+	groupAvStats := a.getGroupAvStats(baseAgent)
 
 	// get differences (group to me)
-	Delta1HP := groupAvHP - float64(myHP)
-	Delta1ST := groupAvST - float64(myST)
-	Delta1ATT := groupAvDEF - float64(myATT)
-	Delta1DEF := groupAvATT - float64(myDEF)
+	Delta1HP := groupAvStats.Health - myStats.Health
+	Delta1ST := groupAvStats.Stamina - myStats.Stamina
+	Delta1ATT := groupAvStats.Attack - myStats.Attack
+	Delta1DEF := groupAvStats.Defence - myStats.Defence
 
 	if len(a.TSN) > 0 {
 		// get TSN average stats
-		TSNavHP, TSNavST, TSNavATT, TSNavDEF := a.getTSNAvStats(baseAgent)
+		TSNavStats := a.getTSNAvStats(baseAgent)
 		// get differences (group to TSN)
-		Delta2HP := groupAvHP - TSNavHP
-		Delta2ST := groupAvST - TSNavST
-		Delta2ATT := groupAvATT - TSNavATT
-		Delta2DEF := groupAvDEF - TSNavDEF
+		Delta2HP := groupAvStats.Health - TSNavStats.Health
+		Delta2ST := groupAvStats.Stamina - TSNavStats.Stamina
+		Delta2ATT := groupAvStats.Attack - TSNavStats.Attack
+		Delta2DEF := groupAvStats.Defence - TSNavStats.Defence
 
-		HPThreshold = myHP + alpha*Delta1HP + beta*Delta2HP
-		StaminaThreshold = myST + alpha*Delta1ST + beta*Delta2ST
-		AttackThreshold = myATT + alpha*Delta1ATT + beta*Delta2ATT
-		DefenseThreshold = myDEF + alpha*Delta1DEF + beta*Delta2DEF
+		HPThreshold = myStats.Health + alpha*Delta1HP + beta*Delta2HP
+		StaminaThreshold = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
+		AttackThreshold = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
+		DefenseThreshold = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
 
 		return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
 	}
 	// caluclate the thresholds (for all the decisions)
-	HPThreshold = (myHP + alpha*Delta1HP) * float64(1.02)
-	StaminaThreshold = (myST + alpha*Delta1ST) * float64(1.02)
-	AttackThreshold = (myATT + alpha*Delta1ATT) * float64(1.05)
-	DefenseThreshold = (myDEF + alpha*Delta1DEF) * float64(1.05)
+	HPThreshold = (myStats.Health + alpha*Delta1HP) * float64(1.02)
+	StaminaThreshold = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
+	AttackThreshold = (myStats.Attack + alpha*Delta1ATT) * float64(1.05)
+	DefenseThreshold = (myStats.Defence + alpha*Delta1DEF) * float64(1.05)
 
 	return HPThreshold, StaminaThreshold, AttackThreshold, DefenseThreshold
 }
