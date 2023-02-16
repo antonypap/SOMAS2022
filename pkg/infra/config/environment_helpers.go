@@ -43,7 +43,7 @@ func EnvToString(key string, def string) string {
 func EnvToBool(key string, def bool) bool {
 	b, err := strconv.ParseBool(os.Getenv(key))
 	if err != nil {
-		logging.Log(logging.Warn, nil, fmt.Sprintf("%s unset, defaulting to %d\n", key, def))
+		logging.Log(logging.Warn, nil, fmt.Sprintf("%s unset, defaulting to %t\n", key, def))
 
 		return def
 	}

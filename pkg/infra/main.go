@@ -74,6 +74,8 @@ func startGameLoop() {
 
 	w, csvFile := initCsvLogging()
 
+	initialAgents := len(agentMap)
+
 	for globalState.CurrentLevel = 1; globalState.CurrentLevel < (gameConfig.NumLevels + 1); globalState.CurrentLevel++ {
 		levelLog := logging.LevelStages{}
 		// Election Stage
@@ -229,7 +231,7 @@ func startGameLoop() {
 
 		// TODO: Loot Discussion Stage
 
-		lootPool := generateLootPool(uint(len(agentMap)))
+		lootPool := generateLootPool(uint(initialAgents))
 		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
 		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, agentMap, channelsMap)
 		lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)

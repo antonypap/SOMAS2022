@@ -51,7 +51,7 @@ func NumberEquipmentDropped(E float64, nAgent uint) uint {
 func GetPotionDistribution(nAgent uint) (uint, uint) {
 	tau := rand.Float64()
 	// hardcoded by design
-	P := 0.2
+	P := float64(config.EnvToFloat("POTION_SCARCITY_PCT", 0.2))
 	NumberHealthPotionDropped := uint((tau) * float64(NumberPotionDropped(P, nAgent)))
 	NumberStaminaPotionDropped := uint((1 - tau) * float64(NumberPotionDropped(P, nAgent)))
 	return NumberHealthPotionDropped, NumberStaminaPotionDropped
@@ -61,7 +61,7 @@ func GetPotionDistribution(nAgent uint) (uint, uint) {
 func GetEquipmentDistribution(nAgent uint) (uint, uint) {
 	tau := rand.Float64()
 	// hardcoded by design
-	E := 0.15
+	E := float64(config.EnvToFloat("EQUIPMENT_SCARCITY_PCT", 0.15))
 	NumberWeaponDropped := uint((tau) * float64(NumberEquipmentDropped(E, nAgent)))
 	NumberShieldDropped := uint((1 - tau) * float64(NumberEquipmentDropped(E, nAgent)))
 	return NumberWeaponDropped, NumberShieldDropped
