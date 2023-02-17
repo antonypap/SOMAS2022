@@ -4,22 +4,27 @@ import matplotlib.pyplot as plt
 
 OUTPUT_FILE_LOCATION = "./output/output.json"
 RUN_COMMAND = "go run ./pkg/infra "
-NUM_ITERATIONS = 1
+NUM_ITERATIONS = 30
 
 
-def fixed_dict_to_plot_both(d1: dict, d2: dict):
+def fixed_dict_to_plot_both():
     # title = "Level Reached Against Fixed Sanction Length"
     xlabel = "Fixed Sanction Length (Turns)"
-    ylabel = "Average Level Reached (Turns)"
+    ylabel = f"Average Level Reached (n={NUM_ITERATIONS})"
     filename = "fixedBoth"
+
+    d1 = fixedLength(is_persistent=True)
+    d2 = fixedLength(is_persistent=False)
 
     names1, counts1 = zip(*d1.items())
     names2, counts2 = zip(*d2.items())
+
     plt.figure()
-    plt.plot(names1, counts1, "-o")
-    plt.plot(names2, counts2, "-o")
+    plt.plot(names1, counts1, "-o", label="Persistent Sanctions")
+    plt.plot(names2, counts2, "-o", label="Non-Persistent Sanctions")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    plt.legend()
     plt.savefig(f"./figures/{filename}.pdf")
 
 
@@ -27,7 +32,7 @@ def fixed_dict_to_plot(data: dict, is_persistent: bool):
 
     # title = "Level Reached Against Fixed Sanction Length"
     xlabel = "Fixed Sanction Length (Turns)"
-    ylabel = "Average Level Reached (Turns)"
+    ylabel = f"Average Level Reached (n={NUM_ITERATIONS})"
     filename = "fixedNonPersist"
     if is_persistent:
         filename = "fixedPersist"
@@ -82,8 +87,6 @@ def graduated():
 
 
 if __name__ == "__main__":
-    fixedPer = fixedLength(is_persistent=True)
-    fixedNotPer = fixedLength(is_persistent=False)
-    fixed_dict_to_plot_both(fixedPer, fixedNotPer)
+    fixed_dict_to_plot_both()
     # dynamic()
     # graduated()
