@@ -7,7 +7,6 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -240,9 +239,7 @@ func uintStr(in uint) string {
 func initCsvLogging() (*csv.Writer, *os.File) {
 	// create csv for logging
 
-	dt := time.Now()
-	logName := dt.Format("15-04")
-	csvFile, err := os.Create("logCSV/" + logName + "-gameLog.csv")
+	csvFile, err := os.Create("logCSV/gameLog.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
