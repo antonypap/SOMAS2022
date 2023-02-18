@@ -169,11 +169,11 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	vAS := view.AgentState()
 
 	// Create agent map deep copy
-	agentMap := make(map[commons.ID]state.HiddenAgentState)
+	agentMapDeepCopy := make(map[commons.ID]state.HiddenAgentState)
 	itr := vAS.Iterator()
 	for !itr.Done() {
 		id, hiddenState, _ := itr.Next()
-		agentMap[id] = hiddenState
+		agentMapDeepCopy[id] = hiddenState
 	}
 	// ids := commons.ImmutableMapKeys(vAS)
 
@@ -188,7 +188,7 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	cnt := 0
 
 	// Use random access of maps in go to take n random samples
-	for id, hiddenState := range agentMap {
+	for id, hiddenState := range agentMapDeepCopy {
 		if cnt == sampleLength {
 			// Unsorted array
 			return
