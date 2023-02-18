@@ -223,6 +223,7 @@ func startGameLoop() {
 				logging.OutputLog(logging.Loss)
 
 				csvFile.Close()
+				fmt.Println(csvFile.Name())
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))

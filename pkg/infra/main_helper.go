@@ -264,9 +264,9 @@ func logLevel(levelLog logging.LevelStages, agentmap map[string]agent.Agent, w *
 		personality, sanctioned := a.GetStats()
 		avPersonality += personality
 		avSanctioned += sanctioned
-		if personality < 25 {
+		if personality <= 25 {
 			countSelfish += 1
-		} else if personality > 75 {
+		} else if personality >= 75 {
 			countSelfless += 1
 		} else {
 			countCollective += 1

@@ -1,14 +1,14 @@
 # each el in list are params for a game
-listAgentCollective=(10 0 20)
-listAgentSelfish=(20 10 0)
-listAgentAgr=(0 20 10)
+listAgentCollective=(30)
+listAgentSelfish=(30)
+listAgentAgr=(30)
 
-listSELFISH_PER=(25 25 25)
-listCOLLECTIVE_PER=(50 50 50)
-listSELFLESS_PER=(75 75 75)
+listSELFISH_PER=(25)
+listCOLLECTIVE_PER=(50)
+listSELFLESS_PER=(75)
 
-listDEFECTION=(true true true)
-listUPDATE_PERSONALITY=(true true true)
+listDEFECTION=(true)
+listUPDATE_PERSONALITY=(true)
 
 for i in ${!listAgentCollective[@]}; do
   AgentCollective=${listAgentCollective[i]}
@@ -33,7 +33,7 @@ for i in ${!listAgentCollective[@]}; do
   export DEFECTION=$AgentDEFECTION
   export UPDATE_PERSONALITY=$AgentUPDATE_PERSONALITY
 
-  OUTPUT=$(make| tail -1)
+  OUTPUT=$(go run ./pkg/infra -fSanc=20 | tail -1)
   echo $OUTPUT
   python3 plotGame.py -f $OUTPUT
 
