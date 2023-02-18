@@ -2,6 +2,7 @@ package team3
 
 import (
 	"math/rand"
+	"sort"
 
 	cmdline "infra/cmdLine"
 	"infra/game/agent"
@@ -188,6 +189,24 @@ func (a *AgentThree) updateSanctionMap(id commons.ID, sanction sanctions.Sanctio
 	}
 }
 
+func (a *AgentThree) SortAgentsRep(prunedMap map[commons.ID]agent.Agent) []commons.ID {
+	// extract keys of agents
+	var keys []commons.ID
+
+	for key := range prunedMap {
+		// if _, ok := m2[key]; ok {
+		keys = append(keys, key)
+		// }
+	}
+
+	// sort them according to (leaders, i.e. this agent) reputation, desc
+	sort.Slice(keys, func(i, j int) bool {
+		return a.reputationMap[keys[i]] > a.reputationMap[keys[j]]
+	})
+
+	return keys
+}
+
 func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[commons.ID]agent.Agent {
 
 	cmdParams := cmdline.CmdLineInits
@@ -227,5 +246,8 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 
 		}
 	}
+
+	// sortedKeys := a.SortAgentsRep(pruned)
+
 	return pruned
 }
