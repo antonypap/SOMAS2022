@@ -22,9 +22,9 @@ for i in ${!listAgentCollective[@]}; do
   AgentDEFECTION=${listDEFECTION[i]}
   AgentUPDATE_PERSONALITY=${listUPDATE_PERSONALITY[i]}
   
-  export AGENT_TEAM3NEUT_QUANTITY=$AgentCollective
-  export AGENT_TEAM3PAS_QUANTITY=$AgentAgr
-  export AGENT_TEAM3AGR_QUANTITY=$AgentSelfish
+  export AGENT_COLLECTIVE_QUANTITY=$AgentCollective
+  export AGENT_SELFLESS_QUANTITY=$AgentAgr
+  export AGENT_SELFISH_QUANTITY=$AgentSelfish
  
   export SELFISH_PER=$AgentSELFISH_PER
   export COLLECTIVE_PER=$AgentCOLLECTIVE_PER
