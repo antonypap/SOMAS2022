@@ -1,6 +1,7 @@
 package loot
 
 import (
+	"errors"
 	"fmt"
 	"infra/game/decision"
 	"infra/game/message"
@@ -117,41 +118,41 @@ func AgentLootDecisions(
 	return propTally
 }
 
-func HandleLootAllocation(globalState state.State, allocation map[commons.ID]map[commons.ItemID]struct{}, pool *state.LootPool, agentMap map[commons.ID]agent.Agent) *state.State {
-	weaponSet := itemListToSet(pool.Weapons())
-	shieldSet := itemListToSet(pool.Shields())
-	hpPotionSet := itemListToSet(pool.HpPotions())
-	staminaPotionSet := itemListToSet(pool.StaminaPotions())
+// func HandleLootAllocation(globalState state.State, allocation map[commons.ID]map[commons.ItemID]struct{}, pool *state.LootPool, agentMap map[commons.ID]agent.Agent) *state.State {
+// 	weaponSet := itemListToSet(pool.Weapons())
+// 	shieldSet := itemListToSet(pool.Shields())
+// 	hpPotionSet := itemListToSet(pool.HpPotions())
+// 	staminaPotionSet := itemListToSet(pool.StaminaPotions())
 
-	// each agent can only take 1 item
-	// calc diff of user between their normalized average and health/stamina/attack/defense, get highest diff
-	// and use it as a boolean param for item selection
+// 	// each agent can only take 1 item
+// 	// calc diff of user between their normalized average and health/stamina/attack/defense, get highest diff
+// 	// and use it as a boolean param for item selection
 
-	// averageHP, averageST, averageATT, averageDEF := getAverageStats(globalState)
+// 	// averageHP, averageST, averageATT, averageDEF := getAverageStats(globalState)
 
-	for agentID, items := range allocation {
-		agentState := globalState.AgentState[agentID]
-		a := agentMap[agentID]
+// 	for agentID, items := range allocation {
+// 		agentState := globalState.AgentState[agentID]
+// 		a := agentMap[agentID]
 
-		// if items is of length 1, then take allocation
-		if len(items) == 1 {
-			// assign the only piece of loot they are eligable for
-			for item := range items {
-				assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-			}
-		} else {
-			// choose the most needed item from the list of allocated items
-			item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+// 		// if items is of length 1, then take allocation
+// 		if len(items) == 1 {
+// 			// assign the only piece of loot they are eligable for
+// 			for item := range items {
+// 				assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+// 			}
+// 		} else {
+// 			// choose the most needed item from the list of allocated items
+// 			item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 
-			// asign the most needed item to the agent
-			assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-		}
+// 			// asign the most needed item to the agent
+// 			assignChosenItem(item.Id(), weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+// 		}
 
-		globalState.AgentState[agentID] = agentState
+// 		globalState.AgentState[agentID] = agentState
 
-	}
-	return &globalState
-}
+// 	}
+// 	return &globalState
+// }
 
 func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPool, looters []agent.Agent) *state.State {
 	weaponSet := itemListDescending(pool.Weapons())
@@ -159,41 +160,60 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	hpPotionSet := itemListDescending(pool.HpPotions())
 	staminaPotionSet := itemListDescending(pool.StaminaPotions())
 
-	for _, agent := range looters {
-		idealAction := agent.FightActionNoProposal(*agent.BaseAgent)
-		switch idealAction {
-		case decision.Attack:
-			//give sword
-		case decision.Defend:
-			// give shield
-		case decision.Cower:
-			// give hp/stam
-		default:
+	totalNumItems := len(weaponSet) + len(shieldSet) + len(hpPotionSet) + len(staminaPotionSet)
+
+	for totalNumItems > 0 {
+		for _, agent := range looters {
+			agentID := agent.ID()
+			agentState := globalState.AgentState[agentID]
+			chosenItem := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+			switch chosenItem.Name() {
+			case state.SWORD:
+				err, updatedWeaponSet := removeItemFromList(chosenItem, weaponSet)
+				if err == nil {
+					agentState.AddWeapon(chosenItem)
+					weaponSet = updatedWeaponSet
+				}
+			case state.SHIELD:
+				err, updatedShieldSet := removeItemFromList(chosenItem, shieldSet)
+				if err == nil {
+					agentState.AddShield(chosenItem)
+					weaponSet = updatedShieldSet
+				}
+			case state.HP_POTION:
+				err, updatedHPSet := removeItemFromList(chosenItem, hpPotionSet)
+				if err == nil {
+					agentState.Hp += chosenItem.Value()
+					hpPotionSet = updatedHPSet
+				}
+			case state.STAMINA_POTION:
+				err, updatedStaminaSet := removeItemFromList(chosenItem, staminaPotionSet)
+				if err == nil {
+					agentState.Stamina += chosenItem.Value()
+					staminaPotionSet = updatedStaminaSet
+				}
+			}
+			globalState.AgentState[agentID] = agentState
 		}
 	}
 
-	// for agentID, items := range allocation {
-	// 	agentState := globalState.AgentState[agentID]
-	// 	a := agentMap[agentID]
-
-	// 	// if items is of length 1, then take allocation
-	// 	if len(items) == 1 {
-	// 		// assign the only piece of loot they are eligable for
-	// 		for item := range items {
-	// 			assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-	// 		}
-	// 	} else {
-	// 		// choose the most needed item from the list of allocated items
-	// 		item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
-
-	// 		// asign the most needed item to the agent
-	// 		assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-	// 	}
-
-	// 	globalState.AgentState[agentID] = agentState
-
-	// }
 	return &globalState
+}
+
+func removeItemFromList(item state.Item, itemList []state.Item) (error, []state.Item) {
+	foundIdx := -1
+	for idx, val := range itemList {
+		if val == item {
+			foundIdx = idx
+			break
+		}
+	}
+	if foundIdx == -1 {
+		return errors.New("item not found"), itemList
+	}
+	frontHalf := make([]state.Item, foundIdx)
+	copy(frontHalf, itemList[:foundIdx])
+	return nil, append(frontHalf, itemList[foundIdx+1:]...)
 }
 
 func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {
@@ -229,12 +249,12 @@ func assignChosenItem(item string, weaponSet map[string]uint, shieldSet map[stri
 
 	if val, ok := weaponSet[item]; ok {
 		// globalState.InventoryMap.Weapons[item] = val
-		agentState.AddWeapon(*state.NewItem(item, val))
+		agentState.AddWeapon(*state.NewItem(item, val, state.SWORD))
 		delete(weaponSet, item)
 		// delete(globalState.InventoryMap.Weapons, item)
 	} else if val, ok := shieldSet[item]; ok {
 		// globalState.InventoryMap.Shields[item] = val
-		agentState.AddShield(*state.NewItem(item, val))
+		agentState.AddShield(*state.NewItem(item, val, state.SHIELD))
 		delete(shieldSet, item)
 		// delete(globalState.InventoryMap.Shields, item)
 	} else if val, ok := hpPotionSet[item]; ok {
