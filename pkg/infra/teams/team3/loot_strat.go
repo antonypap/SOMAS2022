@@ -139,7 +139,7 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 	var thresholds thresholdVals
 	// initiate modifers
 	alpha := 0.2
-	beta := 0.1
+	// beta := 0.01
 	// get my stats
 	myStats := a.getMyStats(baseAgent)
 	// get group stats
@@ -151,22 +151,22 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 	Delta1ATT := groupAvStats.Attack - myStats.Attack
 	Delta1DEF := groupAvStats.Defence - myStats.Defence
 
-	if len(a.TSN) > 0 {
-		// get TSN average stats
-		TSNavStats := a.getTSNAvStats(baseAgent)
-		// get differences (group to TSN)
-		Delta2HP := groupAvStats.Health - TSNavStats.Health
-		Delta2ST := groupAvStats.Stamina - TSNavStats.Stamina
-		Delta2ATT := groupAvStats.Attack - TSNavStats.Attack
-		Delta2DEF := groupAvStats.Defence - TSNavStats.Defence
+	// if len(a.TSN) > 0 {
+	// 	// get TSN average stats
+	// 	TSNavStats := a.getTSNAvStats(baseAgent)
+	// 	// get differences (group to TSN)
+	// 	Delta2HP := groupAvStats.Health - TSNavStats.Health
+	// 	Delta2ST := groupAvStats.Stamina - TSNavStats.Stamina
+	// 	Delta2ATT := groupAvStats.Attack - TSNavStats.Attack
+	// 	Delta2DEF := groupAvStats.Defence - TSNavStats.Defence
 
-		thresholds.Health = myStats.Health + alpha*Delta1HP + beta*Delta2HP
-		thresholds.Stamina = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
-		thresholds.Attack = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
-		thresholds.Defence = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
+	// 	thresholds.Health = myStats.Health + alpha*Delta1HP + beta*Delta2HP
+	// 	thresholds.Stamina = myStats.Stamina + alpha*Delta1ST + beta*Delta2ST
+	// 	thresholds.Attack = myStats.Attack + alpha*Delta1ATT + beta*Delta2ATT
+	// 	thresholds.Defence = myStats.Defence + alpha*Delta1DEF + beta*Delta2DEF
 
-		return thresholds
-	}
+	// 	return thresholds
+	// }
 	// caluclate the thresholds (for all the decisions)
 	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(1.02)
 	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
