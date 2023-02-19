@@ -5,6 +5,7 @@ import (
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/tally"
+	"sort"
 
 	// "math"
 	"sync"
@@ -21,6 +22,12 @@ type agentStateUpdate struct {
 	commons.ID
 	state.AgentState
 }
+
+type ByItemVal []state.Item
+
+func (a ByItemVal) Len() int           { return len(a) }
+func (a ByItemVal) Less(i, j int) bool { return a[i].Value() < a[j].Value() }
+func (a ByItemVal) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func UpdateItems(s state.State, agents map[commons.ID]agent.Agent) *state.State {
 	updatedState := s
@@ -144,6 +151,63 @@ func HandleLootAllocation(globalState state.State, allocation map[commons.ID]map
 
 	}
 	return &globalState
+}
+
+func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPool, looters []agent.Agent) *state.State {
+	weaponSet := itemListDescending(pool.Weapons())
+	shieldSet := itemListDescending(pool.Shields())
+	hpPotionSet := itemListDescending(pool.HpPotions())
+	staminaPotionSet := itemListDescending(pool.StaminaPotions())
+
+	for _, agent := range looters {
+		idealAction := agent.FightActionNoProposal(*agent.BaseAgent)
+		switch idealAction {
+		case decision.Attack:
+			//give sword
+		case decision.Defend:
+			// give shield
+		case decision.Cower:
+			// give hp/stam
+		default:
+		}
+	}
+
+	// for agentID, items := range allocation {
+	// 	agentState := globalState.AgentState[agentID]
+	// 	a := agentMap[agentID]
+
+	// 	// if items is of length 1, then take allocation
+	// 	if len(items) == 1 {
+	// 		// assign the only piece of loot they are eligable for
+	// 		for item := range items {
+	// 			assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+	// 		}
+	// 	} else {
+	// 		// choose the most needed item from the list of allocated items
+	// 		item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+
+	// 		// asign the most needed item to the agent
+	// 		assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+	// 	}
+
+	// 	globalState.AgentState[agentID] = agentState
+
+	// }
+	return &globalState
+}
+
+func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {
+	iterator := list.Iterator()
+	transformedList := make([]state.Item, list.Len())
+	idx := 0
+	for !iterator.Done() {
+		next, _ := iterator.Next()
+		transformedList[idx] = next
+	}
+
+	sort.Sort(ByItemVal(transformedList))
+
+	return transformedList
 }
 
 func itemListToSet(
