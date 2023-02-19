@@ -270,5 +270,4 @@ func startGameLoop() {
 	logging.Log(logging.Info, nil, fmt.Sprintf("Congratulations, The Peasants have escaped the pit with %d remaining.", len(agentMap)))
 	logging.OutputLog(logging.Win)
 	csvFile.Close()
-	fmt.Println(csvFile.Name())
 }
