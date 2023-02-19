@@ -2,6 +2,7 @@ package team3
 
 import (
 	"infra/game/agent"
+	"time"
 
 	"infra/game/commons"
 	"math"
@@ -171,18 +172,13 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	view := baseAgent.View()
 	vAS := view.AgentState()
 
-	// Create agent map deep copy
-	agentMapDeepCopy := make(map[commons.ID]state.HiddenAgentState)
-	itr := vAS.Iterator()
-	for !itr.Done() {
-		id, hiddenState, _ := itr.Next()
-		agentMapDeepCopy[id] = hiddenState
-	}
-	// ids := commons.ImmutableMapKeys(vAS)
+	ids := commons.ImmutableMapKeys(vAS)
+	// get random shuffle of agent ids
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
 
 	productivity := 5.0
 	needs := 5.0
-	// fairness := make(map[commons.ID]float64)
 
 	// Number of agents to sample for KA (fixed)
 	intendedSample := float64(a.numAgents) * a.samplePercent
@@ -191,11 +187,13 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	cnt := 0
 
 	// Use random access of maps in go to take n random samples
-	for id, hiddenState := range agentMapDeepCopy {
+	for _, id := range ids {
 		if cnt == sampleLength {
-			// Unsorted array
+			// stop iterating when reaching the sample length
 			return
 		} else {
+			hiddenState, _ := vAS.Get(id)
+
 			// Init values on first access
 			if _, ok := a.reputationMap[id]; !ok {
 				// init weights to middle value
