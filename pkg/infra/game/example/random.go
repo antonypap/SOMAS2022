@@ -311,13 +311,14 @@ func (r *RandomAgent) HandleTrustMessage(message message.TaggedMessage)
 func (r *RandomAgent) GetStats() (int, int)
 
 func (r *RandomAgent) ChooseItem(BaseAgent agent.BaseAgent,
-	items map[string]struct{},
-	weaponSet map[string]uint,
-	shieldSet map[string]uint,
-	hpPotionSet map[string]uint,
-	staminaPotionSet map[string]uint) string
+	weaponSet []state.Item,
+	shieldSet []state.Item,
+	hpPotionSet []state.Item,
+	staminaPotionSet []state.Item) state.Item
 
 func (r *RandomAgent) RequestLootProposal(ba agent.BaseAgent)
+
+func (r *RandomAgent) SortAgentsArray(agentMap map[commons.ID]agent.Agent) []agent.Agent
 
 func NewRandomAgent() agent.Strategy {
 	return &RandomAgent{bravery: rand.Intn(5)}
