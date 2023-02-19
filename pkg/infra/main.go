@@ -234,7 +234,7 @@ func startGameLoop() {
 
 		lootPool := generateLootPool(uint(initialAgents))
 		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
-		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, agentMap, channelsMap)
+		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, prunedAgentMap, channelsMap)
 		lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
 		globalState = loot.HandleLootAllocation(*globalState, lootActions, lootPool, prunedAgentMap)
 

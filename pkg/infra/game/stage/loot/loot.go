@@ -1,6 +1,7 @@
 package loot
 
 import (
+	"fmt"
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/tally"
@@ -89,20 +90,16 @@ func AgentLootDecisions(
 		start <- startLootMessage
 	}
 
+	fmt.Println("Starts all sent")
+
 	time.Sleep(25 * time.Millisecond)
-	for id, c := range channelsMap {
-		closures[id] <- struct{}{}
-		go func(recv <-chan message.TaggedMessage) {
-			for m := range recv {
-				switch m.Message().(type) {
-				case message.Request:
-					// todo: respond with nil thing here as we're closing! Or do we need to?
-					// maybe because we're closing there's no point...
-				default:
-				}
-			}
-		}(c)
+
+	for _, c := range closures {
+		c <- struct{}{}
+		close(c)
 	}
+
+	fmt.Println("Channels closed")
 
 	for _, c := range channelsMap {
 		close(c)
