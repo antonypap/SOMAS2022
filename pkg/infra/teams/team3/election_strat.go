@@ -87,11 +87,14 @@ func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *deci
 	// should we vote?
 	makeVote := rand.Intn(100)
 	// if makeVote is lower than personality, then vote.
-	if len(candidateArray) > 0 && makeVote < a.personality {
+	if makeVote < a.personality {
 		// Create Ballot
 		var ballot decision.Ballot
 		// number of manifesto preferences we are allowed
 		numCandidate := int(param.NumberOfPreferences())
+		if len(candidateArray) <= numCandidate {
+			numCandidate = len(candidateArray)
+		}
 		for i := 0; i < numCandidate; i++ {
 			ballot = append(ballot, candidateArray[i].id)
 		}
