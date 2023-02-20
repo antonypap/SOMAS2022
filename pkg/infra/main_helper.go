@@ -4,9 +4,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -204,6 +206,13 @@ func checkHpPool() bool {
 	return false
 }
 
+func statDelta() float64 {
+	rand.Seed(time.Now().UnixNano())
+	min := 0.8
+	max := 1.2
+	return min + rand.Float64()*(max-min)
+}
+
 func generateLootPool(numAgents uint) *state.LootPool {
 	nWeapons, nShields := gamemath.GetEquipmentDistribution(numAgents)
 	nHealthPotions, nStaminaPotions := gamemath.GetPotionDistribution(numAgents)
@@ -211,7 +220,8 @@ func generateLootPool(numAgents uint) *state.LootPool {
 	makeItems := func(nItems uint, stats uint, itemType state.ItemName) *commons.ImmutableList[state.Item] {
 		items := make([]state.Item, nItems)
 		for i := uint(0); i < nItems; i++ {
-			items[i] = *state.NewItem(uuid.NewString(), stats, itemType)
+			delta := statDelta()
+			items[i] = *state.NewItem(uuid.NewString(), uint(float64(stats)*delta), itemType)
 		}
 		sort.SliceStable(items, func(i, j int) bool {
 			return items[i].Value() > items[j].Value()
