@@ -8,9 +8,21 @@ import (
 	"infra/game/message/proposal"
 	"infra/game/state"
 	"math/rand"
+	"sort"
 
 	"github.com/benbjohnson/immutable"
 )
+
+type itemPair struct {
+	name state.ItemName
+	val  float64
+}
+
+type itemPairArray []itemPair
+
+func (a itemPairArray) Len() int           { return len(a) }
+func (a itemPairArray) Less(i, j int) bool { return a[i].val < a[j].val }
+func (a itemPairArray) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func (a *AgentThree) LootActionNoProposal(baseAgent agent.BaseAgent) immutable.SortedMap[commons.ItemID, struct{}] {
 	loot := baseAgent.Loot()
@@ -276,12 +288,23 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	diffDEF := groupAvDEF - meanDEF
 
 	// create an array of the above
-	itemsDiffMap := map[state.ItemName]float64{state.HP_POTION: diffHP, state.STAMINA_POTION: diffST, state.SWORD: diffATT, state.SHIELD: diffDEF}
+	hpPair := itemPair{name: state.HP_POTION, val: diffHP}
+	stPair := itemPair{name: state.STAMINA_POTION, val: diffST}
+	attPair := itemPair{name: state.SWORD, val: diffATT}
+	defPair := itemPair{name: state.SHIELD, val: diffDEF}
 
+	itemPairs := []itemPair{hpPair, stPair, attPair, defPair}
 	// order map
-
+	sort.Sort(itemPairArray(itemPairs))
 	// return keys
-	return itemsDiffMap
+
+	output := make([]state.ItemName, 4)
+
+	for idx, itemPair := range itemPairs {
+		output[idx] = itemPair.name
+	}
+
+	return output
 }
 
 func searchForItem(set map[string]uint, items map[string]struct{}) string {
