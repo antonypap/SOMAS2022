@@ -169,28 +169,32 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 			chosenItem := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 			switch chosenItem.Name() {
 			case state.SWORD:
-				err, updatedWeaponSet := removeItemFromList(chosenItem, weaponSet)
+				updatedWeaponSet, err := removeItemFromList(chosenItem, weaponSet)
 				if err == nil {
 					agentState.AddWeapon(chosenItem)
 					weaponSet = updatedWeaponSet
+					totalNumItems -= 1
 				}
 			case state.SHIELD:
-				err, updatedShieldSet := removeItemFromList(chosenItem, shieldSet)
+				updatedShieldSet, err := removeItemFromList(chosenItem, shieldSet)
 				if err == nil {
 					agentState.AddShield(chosenItem)
 					weaponSet = updatedShieldSet
+					totalNumItems -= 1
 				}
 			case state.HP_POTION:
-				err, updatedHPSet := removeItemFromList(chosenItem, hpPotionSet)
+				updatedHPSet, err := removeItemFromList(chosenItem, hpPotionSet)
 				if err == nil {
 					agentState.Hp += chosenItem.Value()
 					hpPotionSet = updatedHPSet
+					totalNumItems -= 1
 				}
 			case state.STAMINA_POTION:
-				err, updatedStaminaSet := removeItemFromList(chosenItem, staminaPotionSet)
+				updatedStaminaSet, err := removeItemFromList(chosenItem, staminaPotionSet)
 				if err == nil {
 					agentState.Stamina += chosenItem.Value()
 					staminaPotionSet = updatedStaminaSet
+					totalNumItems -= 1
 				}
 			}
 			globalState.AgentState[agentID] = agentState
@@ -200,7 +204,7 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	return &globalState
 }
 
-func removeItemFromList(item state.Item, itemList []state.Item) (error, []state.Item) {
+func removeItemFromList(item state.Item, itemList []state.Item) ([]state.Item, error) {
 	foundIdx := -1
 	for idx, val := range itemList {
 		if val == item {
@@ -209,11 +213,11 @@ func removeItemFromList(item state.Item, itemList []state.Item) (error, []state.
 		}
 	}
 	if foundIdx == -1 {
-		return errors.New("item not found"), itemList
+		return itemList, errors.New("item not found")
 	}
 	frontHalf := make([]state.Item, foundIdx)
 	copy(frontHalf, itemList[:foundIdx])
-	return nil, append(frontHalf, itemList[foundIdx+1:]...)
+	return append(frontHalf, itemList[foundIdx+1:]...), nil
 }
 
 func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {

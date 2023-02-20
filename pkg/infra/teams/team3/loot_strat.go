@@ -6,11 +6,11 @@ import (
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/message/proposal"
+	"infra/game/state"
 	"math/rand"
 	"sort"
 
 	"github.com/benbjohnson/immutable"
-	"golang.org/x/exp/maps"
 )
 
 func (a *AgentThree) LootActionNoProposal(baseAgent agent.BaseAgent) immutable.SortedMap[commons.ItemID, struct{}] {
@@ -251,7 +251,10 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 // }
 
 func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
-	items map[string]struct{}, weaponSet map[string]uint, shieldSet map[string]uint, hpPotionSet map[string]uint, staminaPotionSet map[string]uint) string {
+	weaponSet []state.Item,
+	shieldSet []state.Item,
+	hpPotionSet []state.Item,
+	staminaPotionSet []state.Item) state.Item {
 	// function to calculate the agents choice of loot
 
 	// get group average stats
@@ -281,13 +284,10 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 		return sortedDiffs[i] > sortedDiffs[j]
 	})
 
-	defaultItem := maps.Keys(items)[0]
-	var activeSet map[string]uint
+	var activeSet []state.Item
 
 	for _, val := range sortedDiffs {
 		switch val {
-		case 0:
-			return defaultItem
 		case diffHP:
 			activeSet = hpPotionSet
 		case diffST:
@@ -298,14 +298,13 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 			activeSet = shieldSet
 		default:
 		}
-		potentialItem := searchForItem(activeSet, items)
 
-		if potentialItem != "" {
-			return potentialItem
+		// get best corresponding item (sorted)
+		if len(activeSet) > 0 {
+			return activeSet[0]
 		}
 	}
-
-	return defaultItem
+	return state.Item{}
 }
 
 func searchForItem(set map[string]uint, items map[string]struct{}) string {
