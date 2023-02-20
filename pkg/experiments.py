@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 OUTPUT_FILE_LOCATION = "./output/output.json"
 RUN_COMMAND = "go run ./pkg/infra "
-NUM_ITERATIONS = 30
+NUM_ITERATIONS = 10
 
 
 def fixed_dict_to_plot_both():
@@ -51,7 +51,7 @@ def parseJSON(data):
 
 
 def fixedLength(is_persistent: bool = False):
-    durations = [0, 5, 10, 15, 20, 25, 30]
+    durations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     duration_comp = {}
     for duration in durations:
         avg_level_reached = 0

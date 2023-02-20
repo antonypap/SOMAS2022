@@ -28,7 +28,7 @@ func CalculateMonsterHealth(nAgent uint, stamina uint, nLevel uint, currentLevel
 	agentStaminaRatio := NFp / LFp * float64(stamina)
 	levelRatio := float64(currentLevel)/LFp + 0.5
 
-	healthBoost := 2.0
+	healthBoost := 1.5
 
 	totalHealth := delta * agentStaminaRatio * levelRatio
 
