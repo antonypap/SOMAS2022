@@ -161,7 +161,8 @@ func (a *AgentThree) calcW2(id commons.ID) float64 {
 		}
 	}
 	// shifted to [-0.5, 0.5]
-	w2 += (float64(nFD/numRounds) - 0.5) * personalityMod
+	ratioFD := float64(nFD) / float64(numRounds)
+	w2 += (ratioFD - 0.5) * personalityMod
 
 	w2 = clampFloat(w2, 0.0, 10.0)
 
