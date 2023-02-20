@@ -21,7 +21,7 @@ type itemPair struct {
 type itemPairArray []itemPair
 
 func (a itemPairArray) Len() int           { return len(a) }
-func (a itemPairArray) Less(i, j int) bool { return a[i].val < a[j].val }
+func (a itemPairArray) Less(i, j int) bool { return a[i].val > a[j].val }
 func (a itemPairArray) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func (a *AgentThree) LootActionNoProposal(baseAgent agent.BaseAgent) immutable.SortedMap[commons.ItemID, struct{}] {
