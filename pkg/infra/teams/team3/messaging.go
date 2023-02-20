@@ -78,14 +78,15 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	// Gossip IS reputation map ---> one thread will read it, one thread will write it.
 	// Shallow copy introduced in Compile
 
-	for key, value := range t.Gossip {
-		rep, exists := a.reputationMap[key]
+	for id, sentRep := range t.Gossip {
+		ourRep, exists := a.reputationMap[id]
 		if exists {
-			diff := rep - value
-			norm := diff * (a.reputationMap[m.Sender()] / 100)
-			a.reputationMap[key] = rep + norm
+			diff := ourRep - sentRep
+			norm := diff * (a.reputationMap[m.Sender()] / 100.0)
+			newRep := ourRep + norm
+			a.reputationMap[id] = clampFloat(newRep, 0.0, 100.0)
 		} else {
-			a.reputationMap[key] = value
+			a.reputationMap[id] = sentRep
 		}
 
 	}

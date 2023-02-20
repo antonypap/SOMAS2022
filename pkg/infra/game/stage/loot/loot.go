@@ -1,9 +1,12 @@
 package loot
 
 import (
+	"fmt"
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/tally"
+	"log"
+	"sort"
 
 	// "math"
 	"sync"
@@ -20,6 +23,12 @@ type agentStateUpdate struct {
 	commons.ID
 	state.AgentState
 }
+
+type ByItemVal []state.Item
+
+func (a ByItemVal) Len() int           { return len(a) }
+func (a ByItemVal) Less(i, j int) bool { return a[i].Value() < a[j].Value() }
+func (a ByItemVal) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func UpdateItems(s state.State, agents map[commons.ID]agent.Agent) *state.State {
 	updatedState := s
@@ -89,20 +98,16 @@ func AgentLootDecisions(
 		start <- startLootMessage
 	}
 
+	fmt.Println("Starts all sent")
+
 	time.Sleep(25 * time.Millisecond)
-	for id, c := range channelsMap {
-		closures[id] <- struct{}{}
-		go func(recv <-chan message.TaggedMessage) {
-			for m := range recv {
-				switch m.Message().(type) {
-				case message.Request:
-					// todo: respond with nil thing here as we're closing! Or do we need to?
-					// maybe because we're closing there's no point...
-				default:
-				}
-			}
-		}(c)
+
+	for _, c := range closures {
+		c <- struct{}{}
+		close(c)
 	}
+
+	fmt.Println("Channels closed")
 
 	for _, c := range channelsMap {
 		close(c)
@@ -113,40 +118,169 @@ func AgentLootDecisions(
 	return propTally
 }
 
-func HandleLootAllocation(globalState state.State, allocation map[commons.ID]map[commons.ItemID]struct{}, pool *state.LootPool, agentMap map[commons.ID]agent.Agent) *state.State {
-	weaponSet := itemListToSet(pool.Weapons())
-	shieldSet := itemListToSet(pool.Shields())
-	hpPotionSet := itemListToSet(pool.HpPotions())
-	staminaPotionSet := itemListToSet(pool.StaminaPotions())
+// func HandleLootAllocation(globalState state.State, allocation map[commons.ID]map[commons.ItemID]struct{}, pool *state.LootPool, agentMap map[commons.ID]agent.Agent) *state.State {
+// 	weaponSet := itemListToSet(pool.Weapons())
+// 	shieldSet := itemListToSet(pool.Shields())
+// 	hpPotionSet := itemListToSet(pool.HpPotions())
+// 	staminaPotionSet := itemListToSet(pool.StaminaPotions())
 
-	// each agent can only take 1 item
-	// calc diff of user between their normalized average and health/stamina/attack/defense, get highest diff
-	// and use it as a boolean param for item selection
+// 	// each agent can only take 1 item
+// 	// calc diff of user between their normalized average and health/stamina/attack/defense, get highest diff
+// 	// and use it as a boolean param for item selection
 
-	// averageHP, averageST, averageATT, averageDEF := getAverageStats(globalState)
+// 	// averageHP, averageST, averageATT, averageDEF := getAverageStats(globalState)
 
-	for agentID, items := range allocation {
-		agentState := globalState.AgentState[agentID]
-		a := agentMap[agentID]
+// 	for agentID, items := range allocation {
+// 		agentState := globalState.AgentState[agentID]
+// 		a := agentMap[agentID]
 
-		// if items is of length 1, then take allocation
-		if len(items) == 1 {
-			// assign the only piece of loot they are eligable for
-			for item := range items {
-				assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-			}
-		} else {
-			// choose the most needed item from the list of allocated items
-			item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+// 		// if items is of length 1, then take allocation
+// 		if len(items) == 1 {
+// 			// assign the only piece of loot they are eligable for
+// 			for item := range items {
+// 				assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+// 			}
+// 		} else {
+// 			// choose the most needed item from the list of allocated items
+// 			item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 
-			// asign the most needed item to the agent
-			assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
-		}
+// 			// asign the most needed item to the agent
+// 			assignChosenItem(item.Id(), weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
+// 		}
 
-		globalState.AgentState[agentID] = agentState
+// 		globalState.AgentState[agentID] = agentState
 
+// 	}
+// 	return &globalState
+// }
+
+func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPool, looters []agent.Agent) *state.State {
+
+	if len(looters) == 0 {
+		return &globalState
 	}
+
+	weaponSet := itemListDescending(pool.Weapons())
+	shieldSet := itemListDescending(pool.Shields())
+	hpPotionSet := itemListDescending(pool.HpPotions())
+	staminaPotionSet := itemListDescending(pool.StaminaPotions())
+
+	totalNumItems := len(weaponSet) + len(shieldSet) + len(hpPotionSet) + len(staminaPotionSet)
+
+	for totalNumItems > 0 {
+		for _, agent := range looters {
+			agentID := agent.ID()
+			agentState := globalState.AgentState[agentID]
+			itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+			// itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
+			valid := checkDistinctPreferences(itemPreferenceOrder)
+
+			if !valid {
+				log.Panic("Preference order invalid, skipping")
+				continue
+			}
+
+			itemAllocated := false
+			for _, itemName := range itemPreferenceOrder {
+				switch itemName {
+				case state.SWORD:
+					if len(weaponSet) == 0 {
+						continue
+					}
+					agentState.AddWeapon(weaponSet[0])
+					weaponSet = weaponSet[1:]
+					itemAllocated = true
+					totalNumItems--
+
+				case state.SHIELD:
+					if len(shieldSet) == 0 {
+						continue
+					}
+					agentState.AddShield(shieldSet[0])
+					shieldSet = shieldSet[1:]
+					itemAllocated = true
+					totalNumItems--
+
+				case state.HP_POTION:
+					if len(hpPotionSet) == 0 {
+						continue
+					}
+					agentState.Hp += hpPotionSet[0].Value()
+					hpPotionSet = hpPotionSet[1:]
+					itemAllocated = true
+					totalNumItems--
+
+				case state.STAMINA_POTION:
+					if len(staminaPotionSet) == 0 {
+						continue
+					}
+					agentState.Stamina += staminaPotionSet[0].Value()
+					staminaPotionSet = staminaPotionSet[1:]
+					itemAllocated = true
+					totalNumItems--
+				default:
+					continue
+				}
+				if itemAllocated {
+					break
+				}
+			}
+			globalState.AgentState[agentID] = agentState
+
+			if totalNumItems == 0 {
+				break
+			}
+		}
+	}
+
 	return &globalState
+}
+
+func checkDistinctPreferences(prefs []state.ItemName) bool {
+
+	if len(prefs) != 4 {
+		return false
+	}
+
+	for idx, name := range prefs {
+		for _, chkName := range prefs[idx+1:] {
+			if name == chkName {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// func removeItemFromList(item state.Item, itemList []state.Item) ([]state.Item, error) {
+// 	foundIdx := -1
+// 	for idx, val := range itemList {
+// 		if val == item {
+// 			foundIdx = idx
+// 			break
+// 		}
+// 	}
+// 	if foundIdx == -1 {
+// 		return itemList, errors.New("item not found")
+// 	}
+// 	frontHalf := make([]state.Item, foundIdx)
+// 	copy(frontHalf, itemList[:foundIdx])
+// 	return append(frontHalf, itemList[foundIdx+1:]...), nil
+// }
+
+func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {
+	iterator := list.Iterator()
+	transformedList := make([]state.Item, list.Len())
+	idx := 0
+	for !iterator.Done() {
+		next, _ := iterator.Next()
+		transformedList[idx] = next
+		idx++
+	}
+
+	sort.Sort(ByItemVal(transformedList))
+
+	return transformedList
 }
 
 func itemListToSet(
@@ -168,12 +302,12 @@ func assignChosenItem(item string, weaponSet map[string]uint, shieldSet map[stri
 
 	if val, ok := weaponSet[item]; ok {
 		// globalState.InventoryMap.Weapons[item] = val
-		agentState.AddWeapon(*state.NewItem(item, val))
+		agentState.AddWeapon(*state.NewItem(item, val, state.SWORD))
 		delete(weaponSet, item)
 		// delete(globalState.InventoryMap.Weapons, item)
 	} else if val, ok := shieldSet[item]; ok {
 		// globalState.InventoryMap.Shields[item] = val
-		agentState.AddShield(*state.NewItem(item, val))
+		agentState.AddShield(*state.NewItem(item, val, state.SHIELD))
 		delete(shieldSet, item)
 		// delete(globalState.InventoryMap.Shields, item)
 	} else if val, ok := hpPotionSet[item]; ok {

@@ -28,9 +28,9 @@ var InitAgentMap = map[commons.ID]func() agent.Strategy{
 	// "RANDOM": example.NewRandomAgent,
 	// "TEAM1":  team1.NewSocialAgent,
 	// "TEAM2":  team2.NewAgent2,
-	"TEAM3NEUT": team3.NewAgentThreeNeutral,
-	"TEAM3PAS":  team3.NewAgentThreePassive,
-	"TEAM3AGR":  team3.NewAgentThreeAggressive,
+	"COLLECTIVE": team3.NewAgentThreeNeutral,
+	"SELFLESS":   team3.NewAgentThreePassive,
+	"SELFISH":    team3.NewAgentThreeAggressive,
 	// "TEAM5":  team5.NewAgent5,
 	// "TEAM6":  team6.NewTeam6Agent,
 	// "TEAM4":  team4.NewAgentFour,
@@ -223,6 +223,7 @@ func startGameLoop() {
 				logging.OutputLog(logging.Loss)
 
 				csvFile.Close()
+				fmt.Println(csvFile.Name())
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))
@@ -233,9 +234,11 @@ func startGameLoop() {
 
 		lootPool := generateLootPool(uint(initialAgents))
 		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
-		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, agentMap, channelsMap)
-		lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
-		globalState = loot.HandleLootAllocation(*globalState, lootActions, lootPool, prunedAgentMap)
+		sortedAgentArray := stages.AgentMapToSortedArray(prunedAgentMap, globalState)
+		// lootTally := stages.AgentLootDecisions(*globalState, *lootPool, prunedAgentMap, channelsMap)
+		// lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
+		// globalState = loot.HandleLootAllocation(*globalState, lootActions, lootPool, prunedAgentMap)
+		globalState = loot.HandleLootAllocationExhaustive(*globalState, lootPool, sortedAgentArray)
 
 		trade.HandleTrade(*globalState, agentMap, 5, 3)
 

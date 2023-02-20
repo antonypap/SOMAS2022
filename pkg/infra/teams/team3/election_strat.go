@@ -2,6 +2,7 @@ package team3
 
 import (
 	"infra/game/agent"
+	"time"
 
 	"infra/game/commons"
 	"math"
@@ -114,7 +115,7 @@ func (a *AgentThree) calcW1(state state.HiddenAgentState, id commons.ID) float64
 	prevStamina := a.pastStaminaMap[id]
 
 	// extract and normalise personality (range[0,100]), use to dictate update step size
-	personalityMod := float64(a.personality / 100)
+	personalityMod := float64(a.personality) / 100.0
 
 	HP := prevHP - int(currentHP)
 	stamina := prevStamina - int(currentStamina)
@@ -131,7 +132,7 @@ func (a *AgentThree) calcW1(state state.HiddenAgentState, id commons.ID) float64
 		w1 -= 0.5 * personalityMod
 	}
 
-	w1 = clampFloat(w1, 0, 10)
+	w1 = clampFloat(w1, 0.0, 10.0)
 
 	return w1
 }
@@ -144,7 +145,7 @@ func (a *AgentThree) calcW2(id commons.ID) float64 {
 	numRounds := a.fightRoundsHistory.Len()
 
 	// extract and normalise personality (range[0,100]), use to dictate update step size
-	personalityMod := float64(a.personality / 100)
+	personalityMod := float64(a.personality) / 100.0
 
 	// iterate over rounds of last level
 	itr := a.fightRoundsHistory.Iterator()
@@ -160,9 +161,10 @@ func (a *AgentThree) calcW2(id commons.ID) float64 {
 		}
 	}
 	// shifted to [-0.5, 0.5]
-	w2 += (float64(nFD/numRounds) - 0.5) * personalityMod
+	ratioFD := float64(nFD) / float64(numRounds)
+	w2 += (ratioFD - 0.5) * personalityMod
 
-	w2 = clampFloat(w2, 0, 10)
+	w2 = clampFloat(w2, 0.0, 10.0)
 
 	return w2
 }
@@ -170,11 +172,14 @@ func (a *AgentThree) calcW2(id commons.ID) float64 {
 func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	view := baseAgent.View()
 	vAS := view.AgentState()
+
 	ids := commons.ImmutableMapKeys(vAS)
+	// get random shuffle of agent ids
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
 
 	productivity := 5.0
 	needs := 5.0
-	// fairness := make(map[commons.ID]float64)
 
 	// Number of agents to sample for KA (fixed)
 	intendedSample := float64(a.numAgents) * a.samplePercent
@@ -182,10 +187,10 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	sampleLength := int(math.Min(intendedSample, maxLength))
 	cnt := 0
 
-	// Use randomness of maps in go to take n random samples
+	// Use random access of maps in go to take n random samples
 	for _, id := range ids {
 		if cnt == sampleLength {
-			// Unsorted array
+			// stop iterating when reaching the sample length
 			return
 		} else {
 			hiddenState, _ := vAS.Get(id)

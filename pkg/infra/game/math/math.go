@@ -22,7 +22,19 @@ func CalculateDelta() float64 {
 // X, the monster’s resilience
 func CalculateMonsterHealth(nAgent uint, stamina uint, nLevel uint, currentLevel uint) uint {
 	delta := CalculateDelta()
-	return uint(math.Ceil((float64(nAgent) * float64(stamina) / float64(nLevel)) * delta * (float64(currentLevel)/float64(nLevel) + 0.5)))
+	NFp := float64(nAgent)
+	LFp := float64(nLevel)
+
+	agentStaminaRatio := NFp / LFp * float64(stamina)
+	levelRatio := float64(currentLevel)/LFp + 0.5
+
+	healthBoost := 1.5
+
+	totalHealth := delta * agentStaminaRatio * levelRatio
+
+	return uint(totalHealth * healthBoost)
+
+	// return uint(math.Ceil((float64(nAgent) * float64(stamina) / float64(nLevel)) * delta * (float64(currentLevel)/float64(nLevel) + 0.5)))
 }
 
 // Y, monster’s damage rating
@@ -30,7 +42,17 @@ func CalculateMonsterDamage(nAgent uint, HP uint, stamina uint, thresholdPercent
 	delta := CalculateDelta()
 	NFp := float64(nAgent)
 	LFp := float64(nLevel)
-	return uint(delta * (NFp / LFp) * (float64(HP) + float64(stamina)) * (float64(currentLevel)/LFp + 0.5))
+	damageBoost := 3.0
+
+	agentRatio := NFp / LFp
+	hpStamSum := float64(HP) + float64(stamina)
+	levelRatio := float64(currentLevel)/LFp + 0.5
+
+	totalDamage := delta * agentRatio * hpStamSum * levelRatio
+
+	return uint(totalDamage * damageBoost)
+
+	// return uint(delta * (NFp / LFp) * (float64(HP) + float64(stamina)) * (float64(currentLevel)/LFp + 0.5))
 }
 
 func GetNextLevelMonsterValues(gameConfig config.GameConfig, currentLevel uint) (uint, uint) {

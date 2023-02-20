@@ -132,3 +132,22 @@ func AgentPruneMapping(agentMap map[commons.ID]agent.Agent, globalState *state.S
 	return agentMap
 
 }
+
+func AgentMapToSortedArray(prunedMap map[commons.ID]agent.Agent, globalState *state.State) []agent.Agent {
+	leaderId := globalState.CurrentLeader
+	leader, leaderIsAlive := prunedMap[leaderId]
+
+	if leaderIsAlive {
+		prunedArray := leader.SortAgentsArray(prunedMap)
+		return prunedArray
+	}
+
+	defaultArray := make([]agent.Agent, len(prunedMap))
+
+	idx := 0
+	for _, ag := range prunedMap {
+		defaultArray[idx] = ag
+		idx++
+	}
+	return defaultArray
+}

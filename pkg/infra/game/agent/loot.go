@@ -4,6 +4,7 @@ import (
 	"infra/game/commons"
 	"infra/game/decision"
 	"infra/game/message"
+	"infra/game/state"
 
 	"github.com/benbjohnson/immutable"
 )
@@ -21,7 +22,13 @@ type Loot interface {
 	LootActionNoProposal(baseAgent BaseAgent) immutable.SortedMap[commons.ItemID, struct{}]
 	LootAction(baseAgent BaseAgent, proposedLoot immutable.SortedMap[commons.ItemID, struct{}], acceptedProposal message.Proposal[decision.LootAction]) immutable.SortedMap[commons.ItemID, struct{}]
 	PruneAgentList(agentMap map[commons.ID]Agent) map[commons.ID]Agent
-	ChooseItem(BaseAgent BaseAgent, items map[string]struct{}, weaponSet map[string]uint, shieldSet map[string]uint, hpPotionSet map[string]uint, staminaPotionSet map[string]uint) string
+	SortAgentsArray(agentMap map[commons.ID]Agent) []Agent
+	ChooseItem(
+		BaseAgent BaseAgent,
+		weaponSet []state.Item,
+		shieldSet []state.Item,
+		hpPotionSet []state.Item,
+		staminaPotionSet []state.Item) []state.ItemName
 	RequestLootProposal(ba BaseAgent)
 	GetStats() (int, int)
 }

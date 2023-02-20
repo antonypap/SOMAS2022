@@ -4,9 +4,20 @@ import (
 	"infra/game/commons"
 )
 
+type ItemName string
+
+const (
+	SWORD          ItemName = "Sword"
+	SHIELD         ItemName = "Shield"
+	HP_POTION      ItemName = "HP_Potion"
+	STAMINA_POTION ItemName = "Stamina_Potion"
+	NULL           ItemName = "Null"
+)
+
 type Item struct {
 	id    commons.ItemID
 	value uint
+	name  ItemName
 }
 
 func (i Item) Id() commons.ItemID {
@@ -17,8 +28,12 @@ func (i Item) Value() uint {
 	return i.value
 }
 
-func NewItem(id commons.ItemID, value uint) *Item {
-	return &Item{id: id, value: value}
+func (i Item) Name() ItemName {
+	return i.name
+}
+
+func NewItem(id commons.ItemID, value uint, name ItemName) *Item {
+	return &Item{id: id, value: value, name: name}
 }
 
 type LootPool struct {
