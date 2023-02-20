@@ -1,7 +1,6 @@
 package loot
 
 import (
-	"errors"
 	"fmt"
 	"infra/game/decision"
 	"infra/game/message"
@@ -160,41 +159,54 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	hpPotionSet := itemListDescending(pool.HpPotions())
 	staminaPotionSet := itemListDescending(pool.StaminaPotions())
 
+	fmt.Println("W:", weaponSet)
+	fmt.Println("SH:", shieldSet)
+	fmt.Println("HP:", hpPotionSet)
+	fmt.Println("ST:", staminaPotionSet)
+
 	totalNumItems := len(weaponSet) + len(shieldSet) + len(hpPotionSet) + len(staminaPotionSet)
 
 	for totalNumItems > 0 {
 		for _, agent := range looters {
 			agentID := agent.ID()
 			agentState := globalState.AgentState[agentID]
-			chosenItem := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
-			switch chosenItem.Name() {
-			case state.SWORD:
-				updatedWeaponSet, err := removeItemFromList(chosenItem, weaponSet)
-				if err == nil {
-					agentState.AddWeapon(chosenItem)
-					weaponSet = updatedWeaponSet
-					totalNumItems -= 1
-				}
-			case state.SHIELD:
-				updatedShieldSet, err := removeItemFromList(chosenItem, shieldSet)
-				if err == nil {
-					agentState.AddShield(chosenItem)
-					weaponSet = updatedShieldSet
-					totalNumItems -= 1
-				}
-			case state.HP_POTION:
-				updatedHPSet, err := removeItemFromList(chosenItem, hpPotionSet)
-				if err == nil {
-					agentState.Hp += chosenItem.Value()
-					hpPotionSet = updatedHPSet
-					totalNumItems -= 1
-				}
-			case state.STAMINA_POTION:
-				updatedStaminaSet, err := removeItemFromList(chosenItem, staminaPotionSet)
-				if err == nil {
-					agentState.Stamina += chosenItem.Value()
-					staminaPotionSet = updatedStaminaSet
-					totalNumItems -= 1
+			// itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+			itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
+			for _, itemName := range itemPreferenceOrder {
+				switch itemName {
+				case state.SWORD:
+					if len(weaponSet) == 0 {
+						continue
+					}
+					agentState.AddWeapon(weaponSet[0])
+					weaponSet = weaponSet[1:]
+					totalNumItems--
+
+				case state.SHIELD:
+					if len(shieldSet) == 0 {
+						continue
+					}
+					agentState.AddShield(shieldSet[0])
+					shieldSet = shieldSet[1:]
+					totalNumItems--
+
+				case state.HP_POTION:
+					if len(hpPotionSet) == 0 {
+						continue
+					}
+					agentState.Hp += hpPotionSet[0].Value()
+					hpPotionSet = hpPotionSet[1:]
+					totalNumItems--
+
+				case state.STAMINA_POTION:
+					if len(staminaPotionSet) == 0 {
+						continue
+					}
+					agentState.Stamina += staminaPotionSet[0].Value()
+					staminaPotionSet = staminaPotionSet[1:]
+					totalNumItems--
+				default:
+					continue
 				}
 			}
 			globalState.AgentState[agentID] = agentState
@@ -204,21 +216,21 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	return &globalState
 }
 
-func removeItemFromList(item state.Item, itemList []state.Item) ([]state.Item, error) {
-	foundIdx := -1
-	for idx, val := range itemList {
-		if val == item {
-			foundIdx = idx
-			break
-		}
-	}
-	if foundIdx == -1 {
-		return itemList, errors.New("item not found")
-	}
-	frontHalf := make([]state.Item, foundIdx)
-	copy(frontHalf, itemList[:foundIdx])
-	return append(frontHalf, itemList[foundIdx+1:]...), nil
-}
+// func removeItemFromList(item state.Item, itemList []state.Item) ([]state.Item, error) {
+// 	foundIdx := -1
+// 	for idx, val := range itemList {
+// 		if val == item {
+// 			foundIdx = idx
+// 			break
+// 		}
+// 	}
+// 	if foundIdx == -1 {
+// 		return itemList, errors.New("item not found")
+// 	}
+// 	frontHalf := make([]state.Item, foundIdx)
+// 	copy(frontHalf, itemList[:foundIdx])
+// 	return append(frontHalf, itemList[foundIdx+1:]...), nil
+// }
 
 func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {
 	iterator := list.Iterator()
@@ -227,6 +239,7 @@ func itemListDescending(list *commons.ImmutableList[state.Item]) []state.Item {
 	for !iterator.Done() {
 		next, _ := iterator.Next()
 		transformedList[idx] = next
+		idx++
 	}
 
 	sort.Sort(ByItemVal(transformedList))

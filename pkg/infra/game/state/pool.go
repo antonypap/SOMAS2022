@@ -11,6 +11,7 @@ const (
 	SHIELD         ItemName = "Shield"
 	HP_POTION      ItemName = "HP_Potion"
 	STAMINA_POTION ItemName = "Stamina_Potion"
+	NULL           ItemName = "Null"
 )
 
 type Item struct {

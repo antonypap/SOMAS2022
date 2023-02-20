@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"fmt"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/decision"
@@ -285,6 +286,7 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	})
 
 	var activeSet []state.Item
+	nullItem := *state.NewItem("null", 0, state.NULL)
 
 	for _, val := range sortedDiffs {
 		switch val {
@@ -297,6 +299,8 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 		case diffDEF:
 			activeSet = shieldSet
 		default:
+			fmt.Println("In loop")
+			return nullItem
 		}
 
 		// get best corresponding item (sorted)
@@ -304,7 +308,7 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 			return activeSet[0]
 		}
 	}
-	return state.Item{}
+	return nullItem
 }
 
 func searchForItem(set map[string]uint, items map[string]struct{}) string {
