@@ -5,6 +5,7 @@ import (
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/tally"
+	"log"
 	"sort"
 
 	// "math"
@@ -167,6 +168,13 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 			agentState := globalState.AgentState[agentID]
 			// itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 			itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
+			valid := checkDistinctPreferences(itemPreferenceOrder)
+
+			if !valid {
+				log.Panic("Preference order invalid, skipping")
+				continue
+			}
+
 			itemAllocated := false
 			for _, itemName := range itemPreferenceOrder {
 				switch itemName {
@@ -221,6 +229,22 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	}
 
 	return &globalState
+}
+
+func checkDistinctPreferences(prefs []state.ItemName) bool {
+
+	if len(prefs) != 4 {
+		return false
+	}
+
+	for idx, name := range prefs {
+		for _, chkName := range prefs[idx+1:] {
+			if name == chkName {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // func removeItemFromList(item state.Item, itemList []state.Item) ([]state.Item, error) {
