@@ -223,7 +223,7 @@ func startGameLoop() {
 				logging.OutputLog(logging.Loss)
 
 				csvFile.Close()
-				fmt.Println(csvFile.Name())
+				fmt.Printf("Iteration Complete - Game Lost On Level %d", globalState.CurrentLevel)
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))
@@ -273,4 +273,5 @@ func startGameLoop() {
 	logging.Log(logging.Info, nil, fmt.Sprintf("Congratulations, The Peasants have escaped the pit with %d remaining.", len(agentMap)))
 	logging.OutputLog(logging.Win)
 	csvFile.Close()
+	fmt.Println("Iteration Complete - Game won")
 }
