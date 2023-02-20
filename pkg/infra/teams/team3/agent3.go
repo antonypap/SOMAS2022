@@ -141,9 +141,9 @@ func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
 
 	// keep with max perosnality swing
 	if math.IsNaN(increment) {
-		increment = 0
+		increment = 0.0
 	}
-	increment = clampFloat(increment, -5, 5)
+	increment = clampFloat(increment, -5.0, 5.0)
 	a.mutex.Lock()
 	// update personality
 	a.personality = a.personality + int(math.Ceil(increment))
