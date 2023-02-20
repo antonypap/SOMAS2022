@@ -223,6 +223,7 @@ func startGameLoop() {
 				logging.OutputLog(logging.Loss)
 
 				csvFile.Close()
+				fmt.Println(csvFile.Name())
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))
@@ -233,9 +234,11 @@ func startGameLoop() {
 
 		lootPool := generateLootPool(uint(initialAgents))
 		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
-		lootTally := stages.AgentLootDecisions(*globalState, *lootPool, agentMap, channelsMap)
-		lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
-		globalState = loot.HandleLootAllocation(*globalState, lootActions, lootPool, prunedAgentMap)
+		sortedAgentArray := stages.AgentMapToSortedArray(prunedAgentMap, globalState)
+		// lootTally := stages.AgentLootDecisions(*globalState, *lootPool, prunedAgentMap, channelsMap)
+		// lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
+		// globalState = loot.HandleLootAllocation(*globalState, lootActions, lootPool, prunedAgentMap)
+		globalState = loot.HandleLootAllocationExhaustive(*globalState, lootPool, sortedAgentArray)
 
 		trade.HandleTrade(*globalState, agentMap, 5, 3)
 

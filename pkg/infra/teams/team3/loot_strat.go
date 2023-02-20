@@ -6,12 +6,23 @@ import (
 	"infra/game/decision"
 	"infra/game/message"
 	"infra/game/message/proposal"
+	"infra/game/state"
 	"math/rand"
 	"sort"
 
 	"github.com/benbjohnson/immutable"
-	"golang.org/x/exp/maps"
 )
+
+type itemPair struct {
+	name state.ItemName
+	val  float64
+}
+
+type itemPairArray []itemPair
+
+func (a itemPairArray) Len() int           { return len(a) }
+func (a itemPairArray) Less(i, j int) bool { return a[i].val > a[j].val }
+func (a itemPairArray) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func (a *AgentThree) LootActionNoProposal(baseAgent agent.BaseAgent) immutable.SortedMap[commons.ItemID, struct{}] {
 	loot := baseAgent.Loot()
@@ -251,7 +262,10 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 // }
 
 func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
-	items map[string]struct{}, weaponSet map[string]uint, shieldSet map[string]uint, hpPotionSet map[string]uint, staminaPotionSet map[string]uint) string {
+	weaponSet []state.Item,
+	shieldSet []state.Item,
+	hpPotionSet []state.Item,
+	staminaPotionSet []state.Item) []state.ItemName {
 	// function to calculate the agents choice of loot
 
 	// get group average stats
@@ -273,39 +287,24 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	diffATT := groupAvATT - meanATT
 	diffDEF := groupAvDEF - meanDEF
 
-	// create an array of the above, order them
-	diffs := []float64{diffHP, diffST, diffATT, diffDEF}
-	sortedDiffs := make([]float64, len(diffs))
-	copy(sortedDiffs, diffs)
-	sort.Slice(sortedDiffs, func(i, j int) bool {
-		return sortedDiffs[i] > sortedDiffs[j]
-	})
+	// create an array of the above
+	hpPair := itemPair{name: state.HP_POTION, val: diffHP}
+	stPair := itemPair{name: state.STAMINA_POTION, val: diffST}
+	attPair := itemPair{name: state.SWORD, val: diffATT}
+	defPair := itemPair{name: state.SHIELD, val: diffDEF}
 
-	defaultItem := maps.Keys(items)[0]
-	var activeSet map[string]uint
+	itemPairs := []itemPair{hpPair, stPair, attPair, defPair}
+	// order map
+	sort.Sort(itemPairArray(itemPairs))
+	// return keys
 
-	for _, val := range sortedDiffs {
-		switch val {
-		case 0:
-			return defaultItem
-		case diffHP:
-			activeSet = hpPotionSet
-		case diffST:
-			activeSet = staminaPotionSet
-		case diffATT:
-			activeSet = weaponSet
-		case diffDEF:
-			activeSet = shieldSet
-		default:
-		}
-		potentialItem := searchForItem(activeSet, items)
+	output := make([]state.ItemName, 4)
 
-		if potentialItem != "" {
-			return potentialItem
-		}
+	for idx, itemPair := range itemPairs {
+		output[idx] = itemPair.name
 	}
 
-	return defaultItem
+	return output
 }
 
 func searchForItem(set map[string]uint, items map[string]struct{}) string {
