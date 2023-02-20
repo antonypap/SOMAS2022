@@ -14,7 +14,6 @@ func init() {
 
 // Enemy Resilience Modifier
 func CalculateDelta() float64 {
-	rand.Seed(time.Now().UnixNano())
 	min := 0.8
 	max := 1.2
 	return min + rand.Float64()*(max-min)
