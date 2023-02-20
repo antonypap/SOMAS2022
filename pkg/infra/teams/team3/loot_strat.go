@@ -307,14 +307,14 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	return output
 }
 
-func searchForItem(set map[string]uint, items map[string]struct{}) string {
-	for item := range items {
-		if _, ok := set[item]; ok {
-			return item
-		}
-	}
-	return ""
-}
+// func searchForItem(set map[string]uint, items map[string]struct{}) string {
+// 	for item := range items {
+// 		if _, ok := set[item]; ok {
+// 			return item
+// 		}
+// 	}
+// 	return ""
+// }
 
 func GetGroupAv(baseAgent agent.BaseAgent) (float64, float64, float64, float64) {
 	avHP := AverageArray(GetHealthAllAgents(baseAgent))

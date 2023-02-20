@@ -83,8 +83,8 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 		if exists {
 			diff := ourRep - sentRep
 			norm := diff * (a.reputationMap[m.Sender()] / 100.0)
-			a.reputationMap[id] = ourRep + norm
-			a.reputationMap[id] = clampFloat(a.reputationMap[id], 0.0, 100.0)
+			newRep := ourRep + norm
+			a.reputationMap[id] = clampFloat(newRep, 0.0, 100.0)
 		} else {
 			a.reputationMap[id] = sentRep
 		}
