@@ -1,7 +1,6 @@
 package team3
 
 import (
-	"fmt"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/decision"
@@ -9,7 +8,6 @@ import (
 	"infra/game/message/proposal"
 	"infra/game/state"
 	"math/rand"
-	"sort"
 
 	"github.com/benbjohnson/immutable"
 )
@@ -255,7 +253,7 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	weaponSet []state.Item,
 	shieldSet []state.Item,
 	hpPotionSet []state.Item,
-	staminaPotionSet []state.Item) state.Item {
+	staminaPotionSet []state.Item) []state.ItemName {
 	// function to calculate the agents choice of loot
 
 	// get group average stats
@@ -277,38 +275,13 @@ func (a *AgentThree) ChooseItem(baseAgent agent.BaseAgent,
 	diffATT := groupAvATT - meanATT
 	diffDEF := groupAvDEF - meanDEF
 
-	// create an array of the above, order them
-	diffs := []float64{diffHP, diffST, diffATT, diffDEF}
-	sortedDiffs := make([]float64, len(diffs))
-	copy(sortedDiffs, diffs)
-	sort.Slice(sortedDiffs, func(i, j int) bool {
-		return sortedDiffs[i] > sortedDiffs[j]
-	})
+	// create an array of the above
+	itemsDiffMap := map[state.ItemName]float64{state.HP_POTION: diffHP, state.STAMINA_POTION: diffST, state.SWORD: diffATT, state.SHIELD: diffDEF}
 
-	var activeSet []state.Item
-	nullItem := *state.NewItem("null", 0, state.NULL)
+	// order map
 
-	for _, val := range sortedDiffs {
-		switch val {
-		case diffHP:
-			activeSet = hpPotionSet
-		case diffST:
-			activeSet = staminaPotionSet
-		case diffATT:
-			activeSet = weaponSet
-		case diffDEF:
-			activeSet = shieldSet
-		default:
-			fmt.Println("In loop")
-			return nullItem
-		}
-
-		// get best corresponding item (sorted)
-		if len(activeSet) > 0 {
-			return activeSet[0]
-		}
-	}
-	return nullItem
+	// return keys
+	return itemsDiffMap
 }
 
 func searchForItem(set map[string]uint, items map[string]struct{}) string {

@@ -314,7 +314,7 @@ func (r *RandomAgent) ChooseItem(BaseAgent agent.BaseAgent,
 	weaponSet []state.Item,
 	shieldSet []state.Item,
 	hpPotionSet []state.Item,
-	staminaPotionSet []state.Item) state.Item
+	staminaPotionSet []state.Item) []state.ItemName
 
 func (r *RandomAgent) RequestLootProposal(ba agent.BaseAgent)
 

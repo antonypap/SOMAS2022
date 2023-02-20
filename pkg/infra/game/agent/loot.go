@@ -28,7 +28,7 @@ type Loot interface {
 		weaponSet []state.Item,
 		shieldSet []state.Item,
 		hpPotionSet []state.Item,
-		staminaPotionSet []state.Item) state.Item
+		staminaPotionSet []state.Item) []state.ItemName
 	RequestLootProposal(ba BaseAgent)
 	GetStats() (int, int)
 }
