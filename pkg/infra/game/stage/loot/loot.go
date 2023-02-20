@@ -159,11 +159,6 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 	hpPotionSet := itemListDescending(pool.HpPotions())
 	staminaPotionSet := itemListDescending(pool.StaminaPotions())
 
-	fmt.Println("W:", weaponSet)
-	fmt.Println("SH:", shieldSet)
-	fmt.Println("HP:", hpPotionSet)
-	fmt.Println("ST:", staminaPotionSet)
-
 	totalNumItems := len(weaponSet) + len(shieldSet) + len(hpPotionSet) + len(staminaPotionSet)
 
 	for totalNumItems > 0 {
@@ -217,11 +212,11 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 					break
 				}
 			}
+			globalState.AgentState[agentID] = agentState
+
 			if totalNumItems == 0 {
 				break
 			}
-			fmt.Println(totalNumItems)
-			globalState.AgentState[agentID] = agentState
 		}
 	}
 
