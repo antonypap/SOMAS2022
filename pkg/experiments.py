@@ -51,7 +51,7 @@ def parseJSON(data):
 
 
 def fixedLength(is_persistent: bool = False):
-    durations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    durations = [0,1,2,3,4,5,6]
     duration_comp = {}
     for duration in durations:
         avg_level_reached = 0
@@ -69,6 +69,7 @@ def fixedLength(is_persistent: bool = False):
                 avg_level_reached += lvl
         avg_level_reached /= NUM_ITERATIONS
         duration_comp[duration] = avg_level_reached
+        print(f"Iteration For Duration: {duration} Has Finished - Average Score {avg_level_reached}")
 
     for duration, score in duration_comp.items():
         print(f"duration:{duration}, score:{score}")
