@@ -223,7 +223,7 @@ func startGameLoop() {
 				logging.OutputLog(logging.Loss)
 
 				csvFile.Close()
-				fmt.Printf("Iteration Complete - Game Lost On Level %d", globalState.CurrentLevel)
+				fmt.Printf("Iteration Complete - Game Lost On Level %d \n", globalState.CurrentLevel)
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))
