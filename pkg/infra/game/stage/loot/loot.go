@@ -172,6 +172,7 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 			agentState := globalState.AgentState[agentID]
 			// itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 			itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
+			itemAllocated := false
 			for _, itemName := range itemPreferenceOrder {
 				switch itemName {
 				case state.SWORD:
@@ -180,6 +181,7 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 					}
 					agentState.AddWeapon(weaponSet[0])
 					weaponSet = weaponSet[1:]
+					itemAllocated = true
 					totalNumItems--
 
 				case state.SHIELD:
@@ -188,6 +190,7 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 					}
 					agentState.AddShield(shieldSet[0])
 					shieldSet = shieldSet[1:]
+					itemAllocated = true
 					totalNumItems--
 
 				case state.HP_POTION:
@@ -196,6 +199,7 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 					}
 					agentState.Hp += hpPotionSet[0].Value()
 					hpPotionSet = hpPotionSet[1:]
+					itemAllocated = true
 					totalNumItems--
 
 				case state.STAMINA_POTION:
@@ -204,11 +208,19 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 					}
 					agentState.Stamina += staminaPotionSet[0].Value()
 					staminaPotionSet = staminaPotionSet[1:]
+					itemAllocated = true
 					totalNumItems--
 				default:
 					continue
 				}
+				if itemAllocated {
+					break
+				}
 			}
+			if totalNumItems == 0 {
+				break
+			}
+			fmt.Println(totalNumItems)
 			globalState.AgentState[agentID] = agentState
 		}
 	}
