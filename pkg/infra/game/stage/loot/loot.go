@@ -155,6 +155,11 @@ func AgentLootDecisions(
 // }
 
 func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPool, looters []agent.Agent) *state.State {
+
+	if len(looters) == 0 {
+		return &globalState
+	}
+
 	weaponSet := itemListDescending(pool.Weapons())
 	shieldSet := itemListDescending(pool.Shields())
 	hpPotionSet := itemListDescending(pool.HpPotions())
@@ -166,8 +171,8 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 		for _, agent := range looters {
 			agentID := agent.ID()
 			agentState := globalState.AgentState[agentID]
-			// itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
-			itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
+			itemPreferenceOrder := agent.ChooseItem(*agent.BaseAgent, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
+			// itemPreferenceOrder := []state.ItemName{state.SWORD, state.SHIELD, state.HP_POTION, state.STAMINA_POTION}
 			valid := checkDistinctPreferences(itemPreferenceOrder)
 
 			if !valid {
