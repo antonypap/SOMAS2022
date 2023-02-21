@@ -43,8 +43,9 @@ func main() {
 	debug := flag.Bool("d", false, "Whether to run in debug mode. If false, only logs with level info or above will be shown")
 	id := flag.String("i", time.String(), "Provide an ID for a given run")
 	fixedSanction := flag.Int("fSanc", 1, "Provide fixed sanction length")
-	dynamicSanction := flag.Bool("dSanc", false, "Toggle dynamic sanctioning")
 	graduatedSanction := flag.Bool("gSanc", false, "Toggle graduated sanctioning")
+	maxGradSanction := flag.Int("gSancMax", 1, "Maximum graduated sanction length")
+	dynamicSanction := flag.Bool("dSanc", false, "Toggle dynamic sanctioning")
 	verbose := flag.Bool("verbose", true, "Toggle logger")
 	persistentSanction := flag.Bool("pSanc", false, "Toggles whether sanctions persist across leadership")
 
@@ -56,8 +57,9 @@ func main() {
 	}
 
 	cmdline.CmdLineInits.FixedSanctionDuration = *fixedSanction
-	cmdline.CmdLineInits.DynamicSanctions = *dynamicSanction
 	cmdline.CmdLineInits.GraduatedSanctions = *graduatedSanction
+	cmdline.CmdLineInits.MaxGraduatedSanctionDuration = *maxGradSanction
+	cmdline.CmdLineInits.DynamicSanctions = *dynamicSanction
 	cmdline.CmdLineInits.PersistentSanctions = *persistentSanction
 
 	logging.InitLogger(*verbose, *useJSONFormatter, *debug, *id, globalState)
