@@ -1,10 +1,12 @@
 import os
 import json
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 OUTPUT_FILE_LOCATION = "./output/output.json"
 RUN_COMMAND = "go run ./pkg/infra "
 NUM_ITERATIONS = 30
+
 
 def parseJSON(data):
     level_data = data["Levels"]
@@ -14,9 +16,9 @@ def parseJSON(data):
 # Fixed Length Sanctions
 
 def fixedLength(is_persistent: bool = False):
-    durations = [0,1,2,3,4,5,6,7,8,9,10]
+    durations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     duration_comp = {}
-    for duration in durations:
+    for duration in tqdm(durations):
         avg_level_reached = 0
         for _ in range(NUM_ITERATIONS):
             full_run_command = RUN_COMMAND + \
@@ -32,7 +34,8 @@ def fixedLength(is_persistent: bool = False):
                 avg_level_reached += lvl
         avg_level_reached /= NUM_ITERATIONS
         duration_comp[duration] = avg_level_reached
-        print(f"Iteration For Duration: {duration} Has Finished - Average Score {avg_level_reached}")
+        print(
+            f"Iteration For Duration: {duration} Has Finished - Average Score {avg_level_reached}")
 
     for duration, score in duration_comp.items():
         print(f"duration:{duration}, score:{score}")
@@ -40,6 +43,7 @@ def fixedLength(is_persistent: bool = False):
     fixed_dict_to_plot(duration_comp, is_persistent)
 
     return duration_comp
+
 
 def fixed_dict_to_plot_both():
     # title = "Level Reached Against Fixed Sanction Length"
@@ -82,9 +86,9 @@ def fixed_dict_to_plot(data: dict, is_persistent: bool):
 # Graduated Sanctions
 
 def graduated(is_persistent: bool = False):
-    durations = [0,1,2,3,4,5.6,7,8,9,10]
+    durations = [0, 1, 2, 3, 4, 5.6, 7, 8, 9, 10]
     duration_comp = {}
-    for duration in durations:
+    for duration in tqdm(durations):
         avg_level_reached = 0
         for _ in range(NUM_ITERATIONS):
             full_run_command = RUN_COMMAND + \
@@ -100,7 +104,8 @@ def graduated(is_persistent: bool = False):
                 avg_level_reached += lvl
         avg_level_reached /= NUM_ITERATIONS
         duration_comp[duration] = avg_level_reached
-        print(f"Iteration For Max Duration: {duration} Has Finished - Average Score {avg_level_reached}")
+        print(
+            f"Iteration For Max Duration: {duration} Has Finished - Average Score {avg_level_reached}")
 
     for duration, score in duration_comp.items():
         print(f"Max duration:{duration}, score:{score}")
@@ -110,10 +115,12 @@ def graduated(is_persistent: bool = False):
     return duration_comp
 
 # dynamic
+
+
 def dynamic(is_persistent: bool = False):
-    durations = [0,1,2,3,4,5,6,7,8,9,10]
+    durations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     duration_comp = {}
-    for duration in durations:
+    for duration in tqdm(durations):
         avg_level_reached = 0
         for _ in range(NUM_ITERATIONS):
             full_run_command = RUN_COMMAND + \
@@ -129,7 +136,8 @@ def dynamic(is_persistent: bool = False):
                 avg_level_reached += lvl
         avg_level_reached /= NUM_ITERATIONS
         duration_comp[duration] = avg_level_reached
-        print(f"Iteration For Initial Duration: {duration} Has Finished - Average Score {avg_level_reached}")
+        print(
+            f"Iteration For Initial Duration: {duration} Has Finished - Average Score {avg_level_reached}")
 
     for duration, score in duration_comp.items():
         print(f"Init duration:{duration}, score:{score}")
@@ -137,6 +145,7 @@ def dynamic(is_persistent: bool = False):
     graduated_dict_to_plot(duration_comp, is_persistent)
 
     return duration_comp
+
 
 def graduated_dict_to_plot_both():
     # title = "Level Reached Against Fixed Sanction Length"
@@ -195,6 +204,7 @@ def dynamic_dict_to_plot(data: dict, is_persistent: bool):
 
     return
 
+
 def dynamic_dict_to_plot_both():
     # title = "Level Reached Against Fixed Sanction Length"
     xlabel = "Initial Dynamic Sanction Length (Turns)"
@@ -215,7 +225,8 @@ def dynamic_dict_to_plot_both():
     plt.legend()
     plt.savefig(f"./figures/{filename}.pdf")
 
+
 if __name__ == "__main__":
-    fixed_dict_to_plot_both()
-    # dynamic_dict_to_plot_both()
+    # fixed_dict_to_plot_both()
+    dynamic_dict_to_plot_both()
     # graduated_dict_to_plot_both()
