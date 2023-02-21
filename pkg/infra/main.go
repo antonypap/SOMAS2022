@@ -16,6 +16,7 @@ import (
 	"infra/game/stage/trade"
 	"infra/game/stages"
 	"infra/logging"
+	statscalc "infra/statsCalc"
 	"infra/teams/team3"
 	"math"
 	"sync"
@@ -77,6 +78,8 @@ func startGameLoop() {
 	w, csvFile := initCsvLogging()
 
 	initialAgents := len(agentMap)
+
+	statscalc.Calc.SetStatsCalcData(agentMap)
 
 	for globalState.CurrentLevel = 1; globalState.CurrentLevel < (gameConfig.NumLevels + 1); globalState.CurrentLevel++ {
 		levelLog := logging.LevelStages{}

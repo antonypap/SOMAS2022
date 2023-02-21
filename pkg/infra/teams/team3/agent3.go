@@ -85,7 +85,7 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 		if cmdline.CmdLineInits.PersistentSanctions {
 			a.activeSanctionMap = sanctions.GlobalSanctionMap
 			a.sanctionHistory = sanctions.GlobalSanctionHistory
-			a.sanctionLength = sanctions.GlobalSanctionLength
+			// a.sanctionLength = sanctions.GlobalSanctionLength
 		}
 
 	}

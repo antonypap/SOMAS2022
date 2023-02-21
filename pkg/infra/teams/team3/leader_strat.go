@@ -1,7 +1,6 @@
 package team3
 
 import (
-	"fmt"
 	"math/rand"
 	"sort"
 
@@ -13,6 +12,7 @@ import (
 	"infra/game/message/proposal"
 	"infra/game/state"
 	sanctions "infra/sanctionUtils"
+	statscalc "infra/statsCalc"
 
 	"github.com/benbjohnson/immutable"
 )
@@ -168,18 +168,39 @@ func (a *AgentThree) sanctioningGraduated(agent agent.Agent) int {
 }
 
 func (a *AgentThree) sanctioningDynamic(agent agent.Agent) int {
-	maxDur := cmdline.CmdLineInits.MaxGraduatedSanctionDuration
-	// Compare global avg HP to previous lvl percentage change?
-	r := rand.Intn(2)
-	if r == 0 {
-		a.sanctionLength++
-	} else {
-		a.sanctionLength--
+	initialDur := cmdline.CmdLineInits.FixedSanctionDuration
+	agentId := agent.ID()
+	prevSanctions := a.sanctionHistory[agentId]
+	if len(prevSanctions) == 0 {
+		return initialDur
+	}
+	// Get latest sanction
+	currSanctionDur := prevSanctions[len(prevSanctions)-1]
+
+	metricToEqualise := statscalc.HP
+	state := agent.AgentState()
+	comparator := float64(state.Hp)
+
+	metricMean := statscalc.Calc.GetMean(metricToEqualise)
+	metricStdDev := statscalc.Calc.GetStdDev(metricToEqualise)
+
+	lowerThresh := metricMean - metricStdDev
+	upperThresh := metricMean + metricStdDev
+
+	stepSize := 1
+
+	if comparator >= upperThresh {
+		currSanctionDur += stepSize
+	} else if comparator <= lowerThresh {
+		currSanctionDur -= stepSize
 	}
 
-	a.sanctionLength = clampInt(a.sanctionLength, 0, maxDur)
+	if currSanctionDur < 0 {
+		currSanctionDur = 0
+	}
 
-	return a.sanctionLength
+	return currSanctionDur
+
 }
 
 func (a *AgentThree) updateSanctionHistory(agent agent.Agent, sanctionDuration int) {
@@ -268,7 +289,5 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 
 		}
 	}
-	fmt.Println(a.sanctionLength)
-
 	return pruned
 }

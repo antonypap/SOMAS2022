@@ -35,4 +35,4 @@ func (s *SanctionActivity) UpdateSanction() {
 
 var GlobalSanctionMap map[commons.ID]SanctionActivity = make(map[commons.ID]SanctionActivity)
 var GlobalSanctionHistory map[commons.ID]([]int) = make(map[commons.ID]([]int))
-var GlobalSanctionLength int = 0
+// var GlobalSanctionLength int = 0
