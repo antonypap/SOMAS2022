@@ -137,3 +137,10 @@ func SliceToImmutableList[V comparable](slice []V) *immutable.List[V] {
 	}
 	return list.List()
 }
+
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

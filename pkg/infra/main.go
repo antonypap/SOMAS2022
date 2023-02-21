@@ -44,7 +44,7 @@ func main() {
 	id := flag.String("i", time.String(), "Provide an ID for a given run")
 	fixedSanction := flag.Int("fSanc", 1, "Provide fixed sanction length")
 	graduatedSanction := flag.Bool("gSanc", false, "Toggle graduated sanctioning")
-	maxGradSanction := flag.Int("gSancMax", 1, "Maximum graduated sanction length")
+	maxGradSanction := flag.Int("gSancMax", 5, "Maximum graduated sanction length")
 	dynamicSanction := flag.Bool("dSanc", false, "Toggle dynamic sanctioning")
 	verbose := flag.Bool("verbose", true, "Toggle logger")
 	persistentSanction := flag.Bool("pSanc", false, "Toggles whether sanctions persist across leadership")

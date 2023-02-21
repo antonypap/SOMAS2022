@@ -155,6 +155,7 @@ func (a *AgentThree) willSanctionConstant(agent agent.Agent) int {
 }
 
 func (a *AgentThree) sanctioningGraduated(agent agent.Agent) int {
+	maxDur := cmdline.CmdLineInits.MaxGraduatedSanctionDuration
 	agentId := agent.ID()
 	prevSanctions := a.sanctionHistory[agentId]
 	sanctionDur := 1
@@ -162,7 +163,8 @@ func (a *AgentThree) sanctioningGraduated(agent agent.Agent) int {
 		// Get latest sanction
 		sanctionDur = prevSanctions[len(prevSanctions)-1] + 1
 	}
-	return sanctionDur
+	// Cap to maxDur
+	return commons.Min(sanctionDur, maxDur)
 }
 
 func (a *AgentThree) sanctioningDynamic(agent agent.Agent) int {

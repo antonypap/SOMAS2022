@@ -82,6 +82,7 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 		// this is the issue with having activeSanctionMap as a local var only
 		if cmdline.CmdLineInits.PersistentSanctions {
 			a.activeSanctionMap = sanctions.GlobalSanctionMap
+			a.sanctionHistory = sanctions.GlobalSanctionHistory
 		}
 
 	}
