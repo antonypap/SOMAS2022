@@ -86,7 +86,7 @@ def fixed_dict_to_plot(data: dict, is_persistent: bool):
 # Graduated Sanctions
 
 def graduated(is_persistent: bool = False):
-    durations = [0, 1, 2, 3, 4, 5.6, 7, 8, 9, 10]
+    durations = [0, 1, 2, 3, 4, 5,6, 7, 8, 9, 10]
     duration_comp = {}
     for duration in tqdm(durations):
         avg_level_reached = 0
@@ -228,5 +228,5 @@ def dynamic_dict_to_plot_both():
 
 if __name__ == "__main__":
     # fixed_dict_to_plot_both()
-    dynamic_dict_to_plot_both()
-    # graduated_dict_to_plot_both()
+    # dynamic_dict_to_plot_both()
+    graduated_dict_to_plot_both()
