@@ -1,7 +1,6 @@
 package team3
 
 import (
-	"fmt"
 	"math/rand"
 	"sort"
 
@@ -257,9 +256,6 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 
 		}
 	}
-
-	// sortedKeys :=
-	fmt.Println(a.sanctionHistory)
 
 	return pruned
 }
