@@ -105,7 +105,7 @@ def graduated(is_persistent: bool = False):
     for duration, score in duration_comp.items():
         print(f"Max duration:{duration}, score:{score}")
 
-    fixed_dict_to_plot(duration_comp, is_persistent)
+    graduated_dict_to_plot(duration_comp, is_persistent)
 
     return duration_comp
 
