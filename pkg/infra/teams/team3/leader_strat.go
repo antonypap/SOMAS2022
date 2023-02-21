@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"fmt"
 	"math/rand"
 	"sort"
 
@@ -167,7 +168,18 @@ func (a *AgentThree) sanctioningGraduated(agent agent.Agent) int {
 }
 
 func (a *AgentThree) sanctioningDynamic(agent agent.Agent) int {
-	return rand.Intn(5) + 1
+	maxDur := cmdline.CmdLineInits.MaxGraduatedSanctionDuration
+	// Compare global avg HP to previous lvl percentage change?
+	r := rand.Intn(2)
+	if r == 0 {
+		a.sanctionLength++
+	} else {
+		a.sanctionLength--
+	}
+
+	a.sanctionLength = clampInt(a.sanctionLength, 0, maxDur)
+
+	return a.sanctionLength
 }
 
 func (a *AgentThree) updateSanctionHistory(agent agent.Agent, sanctionDuration int) {
@@ -256,6 +268,7 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 
 		}
 	}
+	fmt.Println(a.sanctionLength)
 
 	return pruned
 }

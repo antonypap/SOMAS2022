@@ -46,6 +46,8 @@ type AgentThree struct {
 	sanctionHistory map[commons.ID]([]int)
 	// tracks if agent is undergoing sanction
 	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
+	// Keep track of previous sanction applied as a leader
+	sanctionLength int
 
 	mutex sync.RWMutex
 }
@@ -83,6 +85,7 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 		if cmdline.CmdLineInits.PersistentSanctions {
 			a.activeSanctionMap = sanctions.GlobalSanctionMap
 			a.sanctionHistory = sanctions.GlobalSanctionHistory
+			a.sanctionLength = sanctions.GlobalSanctionLength
 		}
 
 	}
@@ -180,6 +183,7 @@ func NewAgentThreeNeutral() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
+		sanctionLength:    0,
 	}
 }
 
@@ -208,6 +212,7 @@ func NewAgentThreePassive() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
+		sanctionLength:    0,
 	}
 }
 func NewAgentThreeAggressive() agent.Strategy {
@@ -235,5 +240,6 @@ func NewAgentThreeAggressive() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
+		sanctionLength:    0,
 	}
 }
