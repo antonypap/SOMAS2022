@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"fmt"
 	"math/rand"
 	"sort"
 
@@ -156,8 +157,12 @@ func (a *AgentThree) willSanctionConstant(agent agent.Agent) int {
 func (a *AgentThree) sanctioningGraduated(agent agent.Agent) int {
 	agentId := agent.ID()
 	prevSanctions := a.sanctionHistory[agentId]
-	mostRecentSanction := prevSanctions[len(prevSanctions)-1]
-	return mostRecentSanction + 1
+	sanctionDur := 1
+	if len(prevSanctions) > 0 {
+		// Get latest sanction
+		sanctionDur = prevSanctions[len(prevSanctions)-1] + 1
+	}
+	return sanctionDur
 }
 
 func (a *AgentThree) sanctioningDynamic(agent agent.Agent) int {
@@ -252,6 +257,7 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 	}
 
 	// sortedKeys :=
+	fmt.Println(a.sanctionHistory)
 
 	return pruned
 }
