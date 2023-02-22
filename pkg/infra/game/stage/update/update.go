@@ -11,7 +11,7 @@ import (
 	"github.com/benbjohnson/immutable"
 )
 
-func UpdateInternalStates(agentMap map[commons.ID]agent.Agent, globalState *state.State, immutableFightRounds *commons.ImmutableList[decision.ImmutableFightResult], votesResult *immutable.Map[decision.Intent, uint]) map[commons.ID]logging.AgentLog {
+func InternalStates(agentMap map[commons.ID]agent.Agent, globalState *state.State, immutableFightRounds *commons.ImmutableList[decision.ImmutableFightResult], votesResult *immutable.Map[decision.Intent, uint]) map[commons.ID]logging.AgentLog {
 	var wg sync.WaitGroup
 	agentLogChan := make(chan logging.AgentLog)
 	for id, a := range agentMap {

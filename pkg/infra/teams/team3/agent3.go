@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"github.com/benbjohnson/immutable"
 	cmdline "infra/cmdLine"
 	"infra/config"
 	"infra/game/agent"
@@ -9,9 +10,6 @@ import (
 	"infra/logging"
 	sanctions "infra/sanctionUtils"
 	"math"
-	"sync"
-
-	"github.com/benbjohnson/immutable"
 )
 
 type AgentThree struct {
@@ -43,13 +41,11 @@ type AgentThree struct {
 	sanctioned        int
 
 	// maps each agent to list of previous sanctions
-	sanctionHistory map[commons.ID]([]int)
+	sanctionHistory map[commons.ID][]int
 	// tracks if agent is undergoing sanction
 	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
 	// Keep track of previous sanction applied as a leader
 	sanctionLength int
-
-	mutex sync.RWMutex
 }
 
 // Update internal parameters at the end of each stage
@@ -138,22 +134,20 @@ func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
 	// calculate difference
 	changeNow := avgNow.Health - avgInit.Health
 	// calculate % change
-	pc := ((changeNow - a.changeInit) / math.Abs(changeNow))
+	pc := (changeNow - a.changeInit) / math.Abs(changeNow)
 	// scale
-	increment := (pc * a.alpha)
+	increment := pc * a.alpha
 
-	// keep with max perosnality swing
+	// keep with max personality swing
 	if math.IsNaN(increment) {
 		increment = 0.0
 	}
 	increment = clampFloat(increment, -5.0, 5.0)
-	a.mutex.Lock()
 	// update personality
 	a.personality = a.personality + int(math.Ceil(increment))
 	// keep within maxMin personality
 	a.personality = clampInt(a.personality, 0, 100)
 	// reset initial change to new value.
-	a.mutex.Unlock()
 	a.changeInit = changeNow
 }
 
@@ -179,9 +173,8 @@ func NewAgentThreeNeutral() agent.Strategy {
 		changeInit:        0,
 		alpha:             5,
 		samplePercent:     0.25,
-		sanctionHistory:   make(map[commons.ID]([]int)),
+		sanctionHistory:   make(map[commons.ID][]int),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }
@@ -208,9 +201,8 @@ func NewAgentThreePassive() agent.Strategy {
 		changeInit:        0,
 		alpha:             5,
 		samplePercent:     0.25,
-		sanctionHistory:   make(map[commons.ID]([]int)),
+		sanctionHistory:   make(map[commons.ID][]int),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }
@@ -236,9 +228,8 @@ func NewAgentThreeAggressive() agent.Strategy {
 		changeInit:        0,
 		alpha:             5,
 		samplePercent:     0.25,
-		sanctionHistory:   make(map[commons.ID]([]int)),
+		sanctionHistory:   make(map[commons.ID][]int),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }
