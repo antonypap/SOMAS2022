@@ -19,7 +19,6 @@ import (
 	statscalc "infra/statsCalc"
 	"infra/teams/team3"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/benbjohnson/immutable"
@@ -261,10 +260,7 @@ func startGameLoop() {
 		// TODO: End of level Updates
 		termLeft--
 		globalState.MonsterHealth, globalState.MonsterAttack = gamemath.GetNextLevelMonsterValues(*gameConfig, globalState.CurrentLevel+1)
-		mutex := sync.RWMutex{}
-		mutex.Lock()
 		*viewPtr = globalState.ToView()
-		mutex.Unlock()
 		logging.Log(logging.Info, nil, fmt.Sprintf("------------------------------ Level %d Ended ----------------------------", globalState.CurrentLevel))
 
 		immutableFightRounds := commons.NewImmutableList(fightResultSlice)
