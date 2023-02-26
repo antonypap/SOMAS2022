@@ -2,11 +2,10 @@ package team3
 
 import (
 	"infra/game/agent"
-	"time"
-
 	"infra/game/commons"
 	"math"
 	"sort"
+	"time"
 
 	"infra/game/decision"
 	"infra/game/state"

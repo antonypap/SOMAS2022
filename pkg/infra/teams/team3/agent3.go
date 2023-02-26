@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"github.com/benbjohnson/immutable"
 	cmdline "infra/cmdLine"
 	"infra/config"
 	"infra/game/agent"
@@ -9,9 +10,6 @@ import (
 	"infra/logging"
 	sanctions "infra/sanctionUtils"
 	"math"
-	"sync"
-
-	"github.com/benbjohnson/immutable"
 )
 
 type AgentThree struct {
@@ -48,8 +46,6 @@ type AgentThree struct {
 	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
 	// Keep track of previous sanction applied as a leader
 	sanctionLength int
-
-	mutex sync.RWMutex
 }
 
 // Update internal parameters at the end of each stage
@@ -147,13 +143,11 @@ func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
 		increment = 0.0
 	}
 	increment = clampFloat(increment, -5.0, 5.0)
-	a.mutex.Lock()
 	// update personality
 	a.personality = a.personality + int(math.Ceil(increment))
 	// keep within maxMin personality
 	a.personality = clampInt(a.personality, 0, 100)
 	// reset initial change to new value.
-	a.mutex.Unlock()
 	a.changeInit = changeNow
 }
 
@@ -181,7 +175,6 @@ func NewAgentThreeNeutral() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }
@@ -210,7 +203,6 @@ func NewAgentThreePassive() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }
@@ -238,7 +230,6 @@ func NewAgentThreeAggressive() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
 	}
 }

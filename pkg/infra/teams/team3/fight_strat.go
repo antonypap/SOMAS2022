@@ -147,7 +147,7 @@ func (a *AgentThree) CurrentAction(baseAgent agent.BaseAgent) decision.FightActi
 	return decision.Attack
 }
 
-// Vote on proposal
+// HandleFightProposal Vote on proposal
 func (a *AgentThree) HandleFightProposal(m message.Proposal[decision.FightAction], baseAgent agent.BaseAgent) decision.Intent {
 	// determine whether to vote based on personality.
 	intent := rand.Intn(100)

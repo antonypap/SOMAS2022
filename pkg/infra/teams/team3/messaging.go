@@ -4,7 +4,6 @@ import (
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/message"
-	"sync"
 )
 
 func agentInList(agentID commons.ID, messageList []commons.ID) bool {
@@ -72,9 +71,6 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	mes := m.Message()
 	t := mes.(message.Trust)
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
-
 	// Gossip IS reputation map ---> one thread will read it, one thread will write it.
 	// Shallow copy introduced in Compile
 
@@ -91,7 +87,6 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 
 	}
 	a.socialCap[m.Sender()] += 1
-	mutex.Unlock()
 	//fmt.Println("sender is", t.Recipients, m.Sender(), a.socialCap[m.Sender()])
 	// This function is type void - you can do whatever you want with it. I would suggest keeping a local dictionary
 
