@@ -3,15 +3,10 @@ package team3
 import (
 	"infra/game/agent"
 	"infra/game/commons"
-	"math"
-	"sort"
-	"time"
-
 	"infra/game/decision"
 	"infra/game/state"
-
-	// "infra/logging"
-	"math/rand"
+	"math"
+	"sort"
 
 	"github.com/benbjohnson/immutable"
 )
@@ -24,7 +19,7 @@ type pair struct {
 // Handle No Confidence vote
 func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.Intent {
 	// decide whether to vote in the no-confidence vote based on personality
-	toVote := rand.Intn(100)
+	toVote := a.rng.Intn(100)
 
 	if toVote < a.personality {
 		view := baseAgent.View()
@@ -85,7 +80,7 @@ func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *deci
 		return candidateArray[i].val > candidateArray[j].val
 	})
 	// should we vote?
-	makeVote := rand.Intn(100)
+	makeVote := a.rng.Intn(100)
 	// if makeVote is lower than personality, then vote.
 	if makeVote < a.personality {
 		// Create Ballot
@@ -174,8 +169,7 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 
 	ids := commons.ImmutableMapKeys(vAS)
 	// get random shuffle of agent ids
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
+	a.rng.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
 
 	productivity := 5.0
 	needs := 5.0

@@ -71,7 +71,7 @@ func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[messag
 	// fmt.Println(m)
 
 	// should i make a proposal (based on personality)
-	makesProposal := rand.Intn(100)
+	makesProposal := a.rng.Intn(100)
 	// if makesProposal is lower than personality, then make proposal
 	// low personality scores mean more selfish,
 	if makesProposal < a.personality {
@@ -150,7 +150,7 @@ func (a *AgentThree) CurrentAction(baseAgent agent.BaseAgent) decision.FightActi
 // HandleFightProposal Vote on proposal
 func (a *AgentThree) HandleFightProposal(m message.Proposal[decision.FightAction], baseAgent agent.BaseAgent) decision.Intent {
 	// determine whether to vote based on personality.
-	intent := rand.Intn(100)
+	intent := a.rng.Intn(100)
 
 	// rules := m.Rules()
 	// itr := rules.Iterator()

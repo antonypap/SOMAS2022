@@ -10,6 +10,7 @@ import (
 	"infra/logging"
 	sanctions "infra/sanctionUtils"
 	"math"
+	"math/rand"
 )
 
 type AgentThree struct {
@@ -46,6 +47,7 @@ type AgentThree struct {
 	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
 	// Keep track of previous sanction applied as a leader
 	sanctionLength int
+	rng            *rand.Rand
 }
 
 // Update internal parameters at the end of each stage
@@ -176,6 +178,7 @@ func NewAgentThreeNeutral() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }
 
@@ -204,6 +207,7 @@ func NewAgentThreePassive() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }
 func NewAgentThreeAggressive() agent.Strategy {
@@ -231,5 +235,6 @@ func NewAgentThreeAggressive() agent.Strategy {
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }

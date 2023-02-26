@@ -34,7 +34,7 @@ func (a *AgentThree) CreateManifesto(_ agent.BaseAgent) *decision.Manifesto {
 
 // Leader function to grant the floor?
 func (a *AgentThree) HandleFightProposalRequest(_ message.Proposal[decision.FightAction], _ agent.BaseAgent, _ *immutable.Map[commons.ID, decision.FightAction]) bool {
-	switch rand.Intn(2) {
+	switch a.rng.Intn(2) {
 	case 0:
 		return true
 	default:
