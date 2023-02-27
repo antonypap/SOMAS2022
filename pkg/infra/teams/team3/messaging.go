@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"github.com/benbjohnson/immutable"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/message"
@@ -16,11 +17,10 @@ func agentInList(agentID commons.ID, messageList []commons.ID) bool {
 }
 
 // This is where you must compile your trust message. My example implementation takes ALL agents from the agent map **
-func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) message.Trust {
+func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) message.Trust {
 	// fmt.Println("AGENT 3 COMPOSED: message.Trust")
-
 	// faireness = the function ids --> reputation number: which is the gossip
-	num := int(a.samplePercent * float64(len(agentMap)))
+	num := int(a.samplePercent * float64(agentMap.Len()))
 	agentsToMessage := make([]commons.ID, num)
 
 	// Check TSN first
@@ -33,8 +33,10 @@ func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) me
 		i++
 	}
 
-	// Then fill remaining spots from the rest
-	for k := range agentMap {
+	iterator := agentMap.Iterator()
+
+	for !iterator.Done() {
+		k, _, _ := iterator.Next()
 		if i == num {
 			break
 		}

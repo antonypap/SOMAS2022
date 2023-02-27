@@ -304,7 +304,7 @@ func (r *RandomAgent) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[co
 	return agentMap
 }
 
-func (r *RandomAgent) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) message.Trust
+func (r *RandomAgent) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) message.Trust
 
 func (r *RandomAgent) HandleTrustMessage(message message.TaggedMessage)
 
