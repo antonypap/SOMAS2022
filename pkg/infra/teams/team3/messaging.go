@@ -17,7 +17,7 @@ func agentInList(agentID commons.ID, messageList []commons.ID) bool {
 }
 
 // This is where you must compile your trust message. My example implementation takes ALL agents from the agent map **
-func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) message.Trust {
+func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) (*message.Trust, []commons.ID) {
 	// fmt.Println("AGENT 3 COMPOSED: message.Trust")
 	// faireness = the function ids --> reputation number: which is the gossip
 	num := int(a.samplePercent * float64(agentMap.Len()))
@@ -51,7 +51,6 @@ func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, age
 	}
 
 	// declare new trust message
-	trustMsg := new(message.Trust)
 
 	// avoid concurrent write to/read from trust.Gossip
 	repMapDeepCopy := make(map[commons.ID]float64)
@@ -60,10 +59,8 @@ func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, age
 		repMapDeepCopy[k] = v
 	}
 
-	trustMsg.MakeNewTrust(agentsToMessage, repMapDeepCopy)
-
 	// send off
-	return *trustMsg
+	return message.NewTrust(repMapDeepCopy), agentsToMessage
 }
 
 // You will receive a message of type "TaggedMessage"
@@ -71,12 +68,13 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	// Receive the message.Trust type using m.Message()
 
 	mes := m.Message()
-	t := mes.(message.Trust)
+	t := mes.(*message.Trust)
 
 	// Gossip IS reputation map ---> one thread will read it, one thread will write it.
 	// Shallow copy introduced in Compile
-
-	for id, sentRep := range t.Gossip {
+	iterator := t.Gossip().Iterator()
+	for !iterator.Done() {
+		id, sentRep, _ := iterator.Next()
 		ourRep, exists := a.reputationMap[id]
 		if exists {
 			diff := ourRep - sentRep
@@ -89,7 +87,7 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 
 	}
 	a.socialCap[m.Sender()] += 1
-	//fmt.Println("sender is", t.Recipients, m.Sender(), a.socialCap[m.Sender()])
+	//fmt.Println("sender is", t.recipients, m.Sender(), a.socialCap[m.Sender()])
 	// This function is type void - you can do whatever you want with it. I would suggest keeping a local dictionary
 
 }

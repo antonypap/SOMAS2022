@@ -1,6 +1,7 @@
 package message
 
 import (
+	"github.com/benbjohnson/immutable"
 	"infra/game/commons"
 	"infra/game/state"
 )
@@ -44,13 +45,15 @@ type StartLoot struct {
 }
 
 type Trust struct {
-	Recipients []commons.ID
-	Gossip     map[commons.ID]float64
+	gossip immutable.Map[commons.ID, float64]
 }
 
-func (t *Trust) MakeNewTrust(recips []commons.ID, gos map[commons.ID]float64) {
-	t.Recipients = recips
-	t.Gossip = gos
+func (t Trust) Gossip() *immutable.Map[commons.ID, float64] {
+	return &t.gossip
+}
+
+func NewTrust(gossip map[commons.ID]float64) *Trust {
+	return &Trust{gossip: commons.MapToImmutable(gossip)}
 }
 
 func (t Trust) sealedMessage() {

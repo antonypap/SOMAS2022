@@ -89,8 +89,7 @@ func HandleTrustStage(agentMap map[commons.ID]agent.Agent, channelsMap map[commo
 	immutableAgentMap := commons.MapToImmutable(agentMap)
 	var wg sync.WaitGroup
 	for _, a := range agentMap {
-		msg := a.Strategy.CompileTrustMessage(&immutableAgentMap)
-		senderList := msg.Recipients
+		msg, senderList := a.Strategy.CompileTrustMessage(&immutableAgentMap)
 		a := a
 
 		for _, ag := range senderList {

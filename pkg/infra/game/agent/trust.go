@@ -7,6 +7,6 @@ import (
 )
 
 type Trust interface {
-	CompileTrustMessage(agentMap *immutable.Map[commons.ID, Agent]) message.Trust
+	CompileTrustMessage(agentMap *immutable.Map[commons.ID, Agent]) (*message.Trust, []commons.ID)
 	HandleTrustMessage(message message.TaggedMessage)
 }
