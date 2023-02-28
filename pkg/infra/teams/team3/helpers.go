@@ -5,8 +5,6 @@ import (
 	"infra/game/agent"
 	"infra/game/commons"
 	"math"
-	"math/rand"
-
 	// "os"
 	"strconv"
 )
@@ -188,7 +186,7 @@ func (a *AgentThree) InitUtility(baseAgent agent.BaseAgent) map[commons.ID]int {
 	for !itr.Done() {
 		id, _, _ := itr.Next()
 
-		u[id] = rand.Intn(10)
+		u[id] = a.rng.Intn(10)
 	}
 	return u
 }

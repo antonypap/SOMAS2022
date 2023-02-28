@@ -219,7 +219,6 @@ func startGameLoop() {
 
 			// log last round if we lose
 			if float64(len(agentMap)) < math.Ceil(float64(gameConfig.ThresholdPercentage)*float64(gameConfig.InitialNumAgents)) {
-
 				logLevel(levelLog, agentMap, w)
 
 				logging.Log(logging.Info, nil, fmt.Sprintf("Lost on level %d  with %d remaining", globalState.CurrentLevel, len(agentMap)))

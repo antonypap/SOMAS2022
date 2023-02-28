@@ -71,7 +71,7 @@ func (a *AgentThree) HandleFightInformation(m message.TaggedInformMessage[messag
 	// fmt.Println(m)
 
 	// should i make a proposal (based on personality)
-	makesProposal := rand.Intn(100)
+	makesProposal := a.rng.Intn(100)
 	// if makesProposal is lower than personality, then make proposal
 	// low personality scores mean more selfish,
 	if makesProposal < a.personality {
@@ -147,10 +147,10 @@ func (a *AgentThree) CurrentAction(baseAgent agent.BaseAgent) decision.FightActi
 	return decision.Attack
 }
 
-// Vote on proposal
+// HandleFightProposal Vote on proposal
 func (a *AgentThree) HandleFightProposal(m message.Proposal[decision.FightAction], baseAgent agent.BaseAgent) decision.Intent {
 	// determine whether to vote based on personality.
-	intent := rand.Intn(100)
+	intent := a.rng.Intn(100)
 
 	// rules := m.Rules()
 	// itr := rules.Iterator()
@@ -201,7 +201,7 @@ func (a *AgentThree) thresholdDecision(baseAgent agent.BaseAgent, choice decisio
 
 		return thresholds
 	}
-	// caluclate the thresholds (for all the decisions)
+	// calculate the thresholds (for all the decisions)
 	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(0.98)
 	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(0.98)
 	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(0.98)

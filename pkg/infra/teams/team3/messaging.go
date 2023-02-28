@@ -1,10 +1,10 @@
 package team3
 
 import (
+	"github.com/benbjohnson/immutable"
 	"infra/game/agent"
 	"infra/game/commons"
 	"infra/game/message"
-	"sync"
 )
 
 func agentInList(agentID commons.ID, messageList []commons.ID) bool {
@@ -17,11 +17,10 @@ func agentInList(agentID commons.ID, messageList []commons.ID) bool {
 }
 
 // This is where you must compile your trust message. My example implementation takes ALL agents from the agent map **
-func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) message.Trust {
+func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) (*message.Trust, []commons.ID) {
 	// fmt.Println("AGENT 3 COMPOSED: message.Trust")
-
-	// faireness = the function ids --> reputation number: which is the gossip
-	num := int(a.samplePercent * float64(len(agentMap)))
+	// fairness = the function ids --> reputation number: which is the gossip
+	num := int(a.samplePercent * float64(agentMap.Len()))
 	agentsToMessage := make([]commons.ID, num)
 
 	// Check TSN first
@@ -34,8 +33,10 @@ func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) me
 		i++
 	}
 
-	// Then fill remaining spots from the rest
-	for k := range agentMap {
+	iterator := agentMap.Iterator()
+
+	for !iterator.Done() {
+		k, _, _ := iterator.Next()
 		if i == num {
 			break
 		}
@@ -50,19 +51,9 @@ func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) me
 	}
 
 	// declare new trust message
-	trustMsg := new(message.Trust)
-
-	// avoid concurrent write to/read from trust.Gossip
-	repMapDeepCopy := make(map[commons.ID]float64)
-
-	for k, v := range a.reputationMap {
-		repMapDeepCopy[k] = v
-	}
-
-	trustMsg.MakeNewTrust(agentsToMessage, repMapDeepCopy)
 
 	// send off
-	return *trustMsg
+	return message.NewTrust(a.reputationMap), agentsToMessage
 }
 
 // You will receive a message of type "TaggedMessage"
@@ -70,15 +61,12 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	// Receive the message.Trust type using m.Message()
 
 	mes := m.Message()
-	t := mes.(message.Trust)
+	t := mes.(*message.Trust)
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
-
-	// Gossip IS reputation map ---> one thread will read it, one thread will write it.
-	// Shallow copy introduced in Compile
-
-	for id, sentRep := range t.Gossip {
+	// Gossip IS reputation map.
+	iterator := t.Gossip().Iterator()
+	for !iterator.Done() {
+		id, sentRep, _ := iterator.Next()
 		ourRep, exists := a.reputationMap[id]
 		if exists {
 			diff := ourRep - sentRep
@@ -88,11 +76,8 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 		} else {
 			a.reputationMap[id] = sentRep
 		}
-
 	}
 	a.socialCap[m.Sender()] += 1
-	mutex.Unlock()
-	//fmt.Println("sender is", t.Recipients, m.Sender(), a.socialCap[m.Sender()])
+	//fmt.Println("sender is", t.recipients, m.Sender(), a.socialCap[m.Sender()])
 	// This function is type void - you can do whatever you want with it. I would suggest keeping a local dictionary
-
 }

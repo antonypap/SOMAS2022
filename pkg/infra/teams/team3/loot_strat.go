@@ -92,13 +92,10 @@ func (a *AgentThree) HandleLootInformation(m message.TaggedInformMessage[message
 
 // forcibly call at start of loot phase to begin proceedings
 func (a *AgentThree) RequestLootProposal(baseAgent agent.BaseAgent) { // put your logic here now, instead
-	a.mutex.Lock()
 	sendProposal := rand.Intn(100)
 	if sendProposal > a.personality {
-		a.mutex.Unlock()
 		return
 	}
-	a.mutex.Unlock()
 	// general and send a loot proposal at the start of every turn
 	baseAgent.SendLootProposalToLeader(a.generateLootProposal(baseAgent))
 }
@@ -178,7 +175,7 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 
 	// 	return thresholds
 	// }
-	// caluclate the thresholds (for all the decisions)
+	// calculate the thresholds (for all the decisions)
 	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(1.02)
 	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
 	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(1.05)

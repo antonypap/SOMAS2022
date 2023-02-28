@@ -128,7 +128,6 @@ func getAllocation(gs state.State, agentMap map[commons.ID]agent.Agent, pool *st
 	buildEligibility(pool.StaminaPotions(), getsStaminaPotion, agentToElibilityList)
 
 	return agentToElibilityList
-
 }
 
 // 	wantedItems := make(map[commons.ItemID]map[commons.ID]struct{})

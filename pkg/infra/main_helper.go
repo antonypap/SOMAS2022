@@ -263,7 +263,6 @@ func initCsvLogging() (*csv.Writer, *os.File) {
 	return w, csvFile
 }
 func logLevel(levelLog logging.LevelStages, agentmap map[string]agent.Agent, w *csv.Writer) {
-
 	// quantize personalities to count them
 	countSelfless := 0
 	countSelfish := 0
@@ -281,7 +280,6 @@ func logLevel(levelLog logging.LevelStages, agentmap map[string]agent.Agent, w *
 		} else {
 			countCollective += 1
 		}
-
 	}
 	countAgentint := len(agentMap)
 	if countAgentint > 0 {

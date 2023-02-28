@@ -13,6 +13,7 @@ import (
 	"infra/game/state"
 	"infra/game/tally"
 	"infra/logging"
+	"sync"
 	"time"
 
 	"github.com/benbjohnson/immutable"
@@ -85,19 +86,28 @@ func HandleTrustStage(agentMap map[commons.ID]agent.Agent, channelsMap map[commo
 	closures := make(map[commons.ID]chan<- struct{})
 
 	// SEND ALL MESSAGES OUT
+	immutableAgentMap := commons.MapToImmutable(agentMap)
+	var wg sync.WaitGroup
 	for _, a := range agentMap {
-		msg := a.Strategy.CompileTrustMessage(agentMap)
-		senderList := msg.Recipients
+		msg, senderList := a.Strategy.CompileTrustMessage(&immutableAgentMap)
+		a := a
 
 		for _, ag := range senderList {
+			ag := ag
 			// fmt.Println("SENDING:")
 			if a.ID() == ag {
 				continue
 			}
-			a.SendBlockingMessage(ag, msg)
+			wg.Add(1)
+			go func(id commons.ID, currAgent agent.Agent) {
+				err := currAgent.SendBlockingMessage(id, msg)
+				if err != nil {
+					logging.Log(logging.Error, nil, err.Error())
+				}
+				wg.Done()
+			}(ag, a)
 		}
 	}
-
 	for id, a := range agentMap {
 		a := a
 		closure := make(chan struct{})
@@ -105,7 +115,7 @@ func HandleTrustStage(agentMap map[commons.ID]agent.Agent, channelsMap map[commo
 
 		go (&a).HandleTrust(closure)
 	}
-
+	wg.Wait()
 	// timeout for agents to respond
 	time.Sleep(25 * time.Millisecond)
 	for _, closure := range closures {
@@ -130,7 +140,6 @@ func AgentPruneMapping(agentMap map[commons.ID]agent.Agent, globalState *state.S
 	}
 	// leader has died, hence no sanctioning
 	return agentMap
-
 }
 
 func AgentMapToSortedArray(prunedMap map[commons.ID]agent.Agent, globalState *state.State) []agent.Agent {

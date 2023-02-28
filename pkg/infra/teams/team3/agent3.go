@@ -1,6 +1,7 @@
 package team3
 
 import (
+	"github.com/benbjohnson/immutable"
 	cmdline "infra/cmdLine"
 	"infra/config"
 	"infra/game/agent"
@@ -9,9 +10,7 @@ import (
 	"infra/logging"
 	sanctions "infra/sanctionUtils"
 	"math"
-	"sync"
-
-	"github.com/benbjohnson/immutable"
+	"math/rand"
 )
 
 type AgentThree struct {
@@ -48,8 +47,7 @@ type AgentThree struct {
 	activeSanctionMap map[commons.ID]sanctions.SanctionActivity
 	// Keep track of previous sanction applied as a leader
 	sanctionLength int
-
-	mutex sync.RWMutex
+	rng            *rand.Rand
 }
 
 // Update internal parameters at the end of each stage
@@ -86,7 +84,6 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 			a.activeSanctionMap = sanctions.GlobalSanctionMap
 			a.sanctionHistory = sanctions.GlobalSanctionHistory
 		}
-
 	}
 	// fetch total attack and defence
 	a.AT = int(AS.Attack + AS.BonusAttack())
@@ -142,18 +139,16 @@ func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
 	// scale
 	increment := (pc * a.alpha)
 
-	// keep with max perosnality swing
+	// keep with max personality swing
 	if math.IsNaN(increment) {
 		increment = 0.0
 	}
 	increment = clampFloat(increment, -5.0, 5.0)
-	a.mutex.Lock()
 	// update personality
 	a.personality = a.personality + int(math.Ceil(increment))
 	// keep within maxMin personality
 	a.personality = clampInt(a.personality, 0, 100)
 	// reset initial change to new value.
-	a.mutex.Unlock()
 	a.changeInit = changeNow
 }
 
@@ -181,8 +176,8 @@ func NewAgentThreeNeutral() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }
 
@@ -210,8 +205,8 @@ func NewAgentThreePassive() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }
 func NewAgentThreeAggressive() agent.Strategy {
@@ -238,7 +233,7 @@ func NewAgentThreeAggressive() agent.Strategy {
 		samplePercent:     0.25,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
-		mutex:             sync.RWMutex{},
 		sanctionLength:    0,
+		rng:               rand.New(rand.NewSource(rand.Int63())),
 	}
 }

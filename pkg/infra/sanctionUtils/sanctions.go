@@ -30,7 +30,6 @@ func (s *SanctionActivity) UpdateSanction() {
 	if s.duration == 0 {
 		s.sanctionActive = false
 	}
-
 }
 
 var GlobalSanctionMap map[commons.ID]SanctionActivity = make(map[commons.ID]SanctionActivity)
