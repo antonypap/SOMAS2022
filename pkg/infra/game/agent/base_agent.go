@@ -119,26 +119,6 @@ func (ba *BaseAgent) HandleTrustMessage(m message.Trust) {
 	// fmt.Println("RECEIVED: ", reflect.TypeOf(m))
 }
 
-//func (a *Agent) CompileTrustMessage(agentMap map[commons.ID]Agent) message.Trust {
-//
-//	keys := make([]commons.ID, len(agentMap))
-//
-//	i := 0
-//	for k := range agentMap {
-//		keys[i] = k
-//		i++
-//	}
-//
-//	// declare new trust message
-//	trustMsg := new(message.Trust)
-//
-//	// put stuff inside
-//	trustMsg.MakeNewTrust(keys, make(map[string]float64))
-//
-//	// send off
-//	return *trustMsg
-//}
-
 func (ba *BaseAgent) RequestLootProposal() {
 
 }

@@ -136,7 +136,7 @@ func AgentLootDecisions(
 
 // 		// if items is of length 1, then take allocation
 // 		if len(items) == 1 {
-// 			// assign the only piece of loot they are eligable for
+// 			// assign the only piece of loot they are eligible for
 // 			for item := range items {
 // 				assignChosenItem(item, weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
 // 			}
@@ -144,7 +144,7 @@ func AgentLootDecisions(
 // 			// choose the most needed item from the list of allocated items
 // 			item := a.ChooseItem(*a.BaseAgent, items, weaponSet, shieldSet, hpPotionSet, staminaPotionSet)
 
-// 			// asign the most needed item to the agent
+// 			// assign the most needed item to the agent
 // 			assignChosenItem(item.Id(), weaponSet, shieldSet, hpPotionSet, staminaPotionSet, &agentState)
 // 		}
 
@@ -155,7 +155,6 @@ func AgentLootDecisions(
 // }
 
 func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPool, looters []agent.Agent) *state.State {
-
 	if len(looters) == 0 {
 		return &globalState
 	}
@@ -237,7 +236,6 @@ func HandleLootAllocationExhaustive(globalState state.State, pool *state.LootPoo
 }
 
 func checkDistinctPreferences(prefs []state.ItemName) bool {
-
 	if len(prefs) != 4 {
 		return false
 	}
@@ -380,7 +378,7 @@ func assignChosenItem(item string, weaponSet map[string]uint, shieldSet map[stri
 
 // }
 
-// // works bc normalization changes the data distribution, so small sheild/weapon difference values are significant enough now
+// // works bc normalization changes the data distribution, so small shield/weapon difference values are significant enough now
 // func normalize4El(x, y, z, w float64) (float64, float64, float64, float64) {
 // 	maxVal := minMax4(true, [...]float64{x, y, z, w})
 // 	minVal := minMax4(false, [...]float64{x, y, z, w})
@@ -399,7 +397,7 @@ func assignChosenItem(item string, weaponSet map[string]uint, shieldSet map[stri
 // 	return ans
 // }
 
-// didn't work as mean scaling just recenters the distribution -> sheild/weapon values were too small compared to the rest
+// didn't work as mean scaling just recenters the distribution -> shield/weapon values were too small compared to the rest
 // func meanScale4El(el1 float64, el2 float64, el3 float64, el4 float64) (float64, float64, float64, float64) {
 // 	var mean float64 = (el1 + el2 + el3 + el4) / 4.0
 // 	// fmt.Println(el1, el2, el3, el4)

@@ -175,7 +175,7 @@ func (a *AgentThree) LootThresholdDecision(baseAgent agent.BaseAgent) thresholdV
 
 	// 	return thresholds
 	// }
-	// caluclate the thresholds (for all the decisions)
+	// calculate the thresholds (for all the decisions)
 	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(1.02)
 	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(1.02)
 	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(1.05)

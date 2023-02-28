@@ -140,7 +140,6 @@ func AgentPruneMapping(agentMap map[commons.ID]agent.Agent, globalState *state.S
 	}
 	// leader has died, hence no sanctioning
 	return agentMap
-
 }
 
 func AgentMapToSortedArray(prunedMap map[commons.ID]agent.Agent, globalState *state.State) []agent.Agent {

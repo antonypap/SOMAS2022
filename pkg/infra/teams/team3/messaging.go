@@ -84,10 +84,8 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 		} else {
 			a.reputationMap[id] = sentRep
 		}
-
 	}
 	a.socialCap[m.Sender()] += 1
 	//fmt.Println("sender is", t.recipients, m.Sender(), a.socialCap[m.Sender()])
 	// This function is type void - you can do whatever you want with it. I would suggest keeping a local dictionary
-
 }

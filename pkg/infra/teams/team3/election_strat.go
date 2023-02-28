@@ -66,7 +66,6 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 }
 
 func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *decision.ElectionParams) decision.Ballot {
-
 	// extract the name of the agents who have submitted manifestos
 	candidateArray := make([]pair, 0, param.CandidateList().Len())
 	iterator := param.CandidateList().Iterator()

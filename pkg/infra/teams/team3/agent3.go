@@ -84,7 +84,6 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 			a.activeSanctionMap = sanctions.GlobalSanctionMap
 			a.sanctionHistory = sanctions.GlobalSanctionHistory
 		}
-
 	}
 	// fetch total attack and defence
 	a.AT = int(AS.Attack + AS.BonusAttack())
@@ -140,7 +139,7 @@ func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
 	// scale
 	increment := (pc * a.alpha)
 
-	// keep with max perosnality swing
+	// keep with max personality swing
 	if math.IsNaN(increment) {
 		increment = 0.0
 	}

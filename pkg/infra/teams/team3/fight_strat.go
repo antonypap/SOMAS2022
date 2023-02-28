@@ -201,7 +201,7 @@ func (a *AgentThree) thresholdDecision(baseAgent agent.BaseAgent, choice decisio
 
 		return thresholds
 	}
-	// caluclate the thresholds (for all the decisions)
+	// calculate the thresholds (for all the decisions)
 	thresholds.Health = (myStats.Health + alpha*Delta1HP) * float64(0.98)
 	thresholds.Stamina = (myStats.Stamina + alpha*Delta1ST) * float64(0.98)
 	thresholds.Attack = (myStats.Attack + alpha*Delta1ATT) * float64(0.98)

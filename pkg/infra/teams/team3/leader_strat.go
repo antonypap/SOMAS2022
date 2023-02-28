@@ -200,7 +200,6 @@ func (a *AgentThree) sanctioningDynamic(agent agent.Agent) int {
 	}
 
 	return currSanctionDur
-
 }
 
 func (a *AgentThree) updateSanctionHistory(agent agent.Agent, sanctionDuration int) {
@@ -251,12 +250,10 @@ func (a *AgentThree) SortAgentsArray(agentMap map[commons.ID]agent.Agent) []agen
 }
 
 func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[commons.ID]agent.Agent {
-
 	cmdParams := cmdline.CmdLineInits
 
 	pruned := make(map[commons.ID]agent.Agent)
 	for id, agent := range agentMap {
-
 		currentSanction, sanctionExists := a.activeSanctionMap[id]
 		if sanctionExists {
 			a.updateSanctionMap(id, currentSanction)
@@ -286,7 +283,6 @@ func (a *AgentThree) PruneAgentList(agentMap map[commons.ID]agent.Agent) map[com
 			if sanctionDuration == 0 {
 				pruned[id] = agent
 			}
-
 		}
 	}
 	return pruned
