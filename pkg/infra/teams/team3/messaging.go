@@ -19,7 +19,7 @@ func agentInList(agentID commons.ID, messageList []commons.ID) bool {
 // This is where you must compile your trust message. My example implementation takes ALL agents from the agent map **
 func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, agent.Agent]) (*message.Trust, []commons.ID) {
 	// fmt.Println("AGENT 3 COMPOSED: message.Trust")
-	// faireness = the function ids --> reputation number: which is the gossip
+	// fairness = the function ids --> reputation number: which is the gossip
 	num := int(a.samplePercent * float64(agentMap.Len()))
 	agentsToMessage := make([]commons.ID, num)
 
@@ -52,15 +52,8 @@ func (a *AgentThree) CompileTrustMessage(agentMap *immutable.Map[commons.ID, age
 
 	// declare new trust message
 
-	// avoid concurrent write to/read from trust.Gossip
-	repMapDeepCopy := make(map[commons.ID]float64)
-
-	for k, v := range a.reputationMap {
-		repMapDeepCopy[k] = v
-	}
-
 	// send off
-	return message.NewTrust(repMapDeepCopy), agentsToMessage
+	return message.NewTrust(a.reputationMap), agentsToMessage
 }
 
 // You will receive a message of type "TaggedMessage"
@@ -70,8 +63,7 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	mes := m.Message()
 	t := mes.(*message.Trust)
 
-	// Gossip IS reputation map ---> one thread will read it, one thread will write it.
-	// Shallow copy introduced in Compile
+	// Gossip IS reputation map.
 	iterator := t.Gossip().Iterator()
 	for !iterator.Done() {
 		id, sentRep, _ := iterator.Next()
