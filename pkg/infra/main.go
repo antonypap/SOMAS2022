@@ -36,6 +36,10 @@ var InitAgentMap = map[commons.ID]func() agent.Strategy{
 	// "TEAM4":  team4.NewAgentFour,
 }
 
+var InitSurvivorMap = map[commons.ID]func(personality uint, experience uint) agent.Strategy{
+	"SURVIVED": team3.SurvivedAgentThree,
+}
+
 func main() {
 	// define flags
 	time := time.Now()
@@ -70,7 +74,9 @@ func main() {
 func startGameLoop() {
 	var decisionMap map[commons.ID]decision.FightAction
 	var channelsMap map[commons.ID]chan message.TaggedMessage
+	var prunedAgentMap map[commons.ID]agent.Agent
 	var termLeft uint
+
 	channelsMap = addCommsChannels()
 	*viewPtr = globalState.ToView()
 
@@ -79,6 +85,12 @@ func startGameLoop() {
 	initialAgents := len(agentMap)
 
 	statscalc.Calc.SetStatsCalcData(agentMap)
+	/*
+		Initialsie the tracking log
+	*/
+	trackLog := logging.TrackLog{
+		Agents: make(map[commons.ID]logging.AgentTrack, 0),
+	}
 
 	for globalState.CurrentLevel = 1; globalState.CurrentLevel < (gameConfig.NumLevels + 1); globalState.CurrentLevel++ {
 		levelLog := logging.LevelStages{}
@@ -220,24 +232,67 @@ func startGameLoop() {
 			// log last round if we lose
 			if float64(len(agentMap)) < math.Ceil(float64(gameConfig.ThresholdPercentage)*float64(gameConfig.InitialNumAgents)) {
 
-				logLevel(levelLog, agentMap, w)
-
 				logging.Log(logging.Info, nil, fmt.Sprintf("Lost on level %d  with %d remaining", globalState.CurrentLevel, len(agentMap)))
 				logging.LogToFile(logging.Info, nil, "", levelLog)
 				logging.OutputLog(logging.Loss)
 
+				/*
+					output survivors
+				*/
+				survivors := stages.AgentMapToSurvivorMap(agentMap)
+				// output the survivng agentMap
+				OutputAgentMap(survivors)
+
+				// save tracking to file
+				logging.TrackLogToFile(trackLog)
+				logging.OutputTrackLog()
+
 				csvFile.Close()
-				fmt.Printf("Iteration Complete - Game Lost On Level %d \n", globalState.CurrentLevel)
+				// fmt.Printf("Iteration Complete - Game Lost On Level %d \n", globalState.CurrentLevel)
 				return
 			}
 			fightResultSlice = append(fightResultSlice, *decision.NewImmutableFightResult(fightActions, roundNum))
+
+			/*
+				store trcking information for all agents
+			*/
+			for id, a := range agentMap {
+				log := trackLog.Agents[id]
+				state := a.AgentState()
+				defector := a.AgentState().Defector
+				Personality, _ := a.GetStats()
+				var sanctioned int
+				if _, ok := prunedAgentMap[id]; ok {
+					sanctioned = 0
+				} else {
+					sanctioned = 1
+				}
+
+				trackLog.Agents[id] = logging.AgentTrack{
+					FightAction: append(log.FightAction, uint(fightActions.Choices[id])),
+					Hp:          append(log.Hp, a.AgentState().Hp),
+					Stamina:     append(log.Stamina, a.AgentState().Stamina),
+					Attack:      append(log.Attack, state.TotalAttack()),
+					Defense:     append(log.Defense, state.TotalDefense()),
+					LevelsAlive: append(log.LevelsAlive, a.AgentState().LevelsAlive),
+					TSNlength:   append(log.TSNlength, uint(len(a.GetTSN()))),
+					Personality: append(log.Personality, uint(Personality)),
+					Defector:    append(log.Defector, defector.IsDefector()),
+					Sanctioned:  append(log.Sanctioned, sanctioned),
+				}
+			}
+
 			roundNum++
 		}
 
+		/*
+			update the LevelsAlive parameter for agents still alive
+		*/
+		stages.UpdateLevelAlive(agentMap, globalState)
 		// TODO: Loot Discussion Stage
 
 		lootPool := generateLootPool(uint(initialAgents))
-		prunedAgentMap := stages.AgentPruneMapping(agentMap, globalState)
+		prunedAgentMap = stages.AgentPruneMapping(agentMap, globalState)
 		sortedAgentArray := stages.AgentMapToSortedArray(prunedAgentMap, globalState)
 		// lootTally := stages.AgentLootDecisions(*globalState, *lootPool, prunedAgentMap, channelsMap)
 		// lootActions := discussion.ResolveLootDiscussion(*globalState, prunedAgentMap, lootPool, agentMap[globalState.CurrentLeader], globalState.LeaderManifesto, lootTally)
@@ -258,6 +313,7 @@ func startGameLoop() {
 		levelLog.HPPoolStage.DonatedThisRound = levelLog.HPPoolStage.NewHPPool - levelLog.HPPoolStage.OldHPPool
 
 		// TODO: End of level Updates
+
 		termLeft--
 		globalState.MonsterHealth, globalState.MonsterAttack = gamemath.GetNextLevelMonsterValues(*gameConfig, globalState.CurrentLevel+1)
 		*viewPtr = globalState.ToView()
@@ -273,6 +329,14 @@ func startGameLoop() {
 	}
 	logging.Log(logging.Info, nil, fmt.Sprintf("Congratulations, The Peasants have escaped the pit with %d remaining.", len(agentMap)))
 	logging.OutputLog(logging.Win)
+	/*
+		format the agent map for storage in the csv file
+	*/
+	survivors := stages.AgentMapToSurvivorMap(agentMap)
+	// output the survivng agentMap
+	OutputAgentMap(survivors)
+	// output the tracking file
+	logging.OutputTrackLog()
 	csvFile.Close()
 	fmt.Println("Iteration Complete - Game won")
 }
