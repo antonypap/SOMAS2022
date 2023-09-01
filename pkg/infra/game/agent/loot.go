@@ -31,4 +31,5 @@ type Loot interface {
 		staminaPotionSet []state.Item) []state.ItemName
 	RequestLootProposal(ba BaseAgent)
 	GetStats() (int, int)
+	GetTSN() []commons.ID
 }
