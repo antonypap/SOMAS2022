@@ -23,7 +23,7 @@ func CalculateDelta() float64 {
 func CalculateMonsterHealth(nAgent uint, stamina uint, nLevel uint, currentLevel uint) uint {
 	delta := CalculateDelta()
 	NFp := float64(nAgent)
-	LFp := float64(nLevel)
+	LFp := float64(60)
 
 	agentStaminaRatio := NFp / LFp * float64(stamina)
 	levelRatio := float64(currentLevel)/LFp + 0.5
@@ -41,7 +41,7 @@ func CalculateMonsterHealth(nAgent uint, stamina uint, nLevel uint, currentLevel
 func CalculateMonsterDamage(nAgent uint, HP uint, stamina uint, thresholdPercentage float32, nLevel uint, currentLevel uint) uint {
 	delta := CalculateDelta()
 	NFp := float64(nAgent)
-	LFp := float64(nLevel)
+	LFp := float64(60)
 	damageBoost := 2.5
 
 	agentRatio := NFp / LFp
