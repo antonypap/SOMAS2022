@@ -114,8 +114,14 @@ func (a *AgentThree) RemoveFromTSN(id commons.ID) []commons.ID {
 func (a *AgentThree) UpdateTSN(baseAgent agent.BaseAgent) {
 	for id, rep := range a.reputationMap {
 		// Add to TSN based on both reputation and SC
-		score := rep + float64(a.socialCap[id])
-		if score >= 125 {
+
+		/*
+			Experience is the number of games the agent has been alvie
+			the average game is 60 levels long... You get six EXP points per game
+		*/
+		Experience := rep.Experience / 10
+		score := rep.Reputation + float64(a.socialCap[id]) + Experience
+		if score >= 100 {
 			a.AddToTSN(id)
 		} else {
 			a.RemoveFromTSN(id)
