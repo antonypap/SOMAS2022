@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"infra/game/commons"
+	"infra/game/state"
+	"io/ioutil"
 	"os"
 	"path"
 )
@@ -214,4 +216,29 @@ func OutputLog(outcome Outcome) {
 		log.Fatalf("Failed to write file: %v", err)
 		return
 	}
+}
+
+/*
+	import surviving agents from file
+*/
+
+func ImportSurvivors(survivorAgentMap map[commons.ID]state.SurvivorAgentState) {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("%v", err)
+		return
+	}
+	jsonFile, err := os.Open(path.Join(wd, "output/survivors.json"))
+	if err != nil {
+		// if there is no file, then reurn an empty map
+		return
+	}
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		log.Fatalf("%v", err)
+		return
+	}
+	// load json into the survivorAgentMap
+	json.Unmarshal(byteValue, &survivorAgentMap)
 }
