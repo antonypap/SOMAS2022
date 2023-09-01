@@ -17,17 +17,17 @@ def main(argv):
     file = Path(filename).stem
     workPath = "experiments/"+file
     print(file)
-    os.mkdir(workPath)
+    # os.mkdir(workPath)
 
 
-    plt.plot(data["level"],data["total agents alive"])
-    plt.title('Number of Agents per Level')
-    plt.ylabel('Number of Agents')
-    plt.xlabel('Level')
-    plt.legend(loc="upper right")
-    plt.savefig(workPath+"/Agents per Level.png")
-    # plt.show()
-    plt.clf()
+    # plt.plot(data["level"],data["total agents alive"])
+    # plt.title('Number of Agents per Level')
+    # plt.ylabel('Number of Agents')
+    # plt.xlabel('Level')
+    # plt.legend(loc="upper right")
+    # # plt.savefig(workPath+"/Agents per Level.png")
+    # # plt.show()
+    # plt.clf()
 
     plt.plot(data["average health"], label = 'Average Agent Health')
     plt.plot(data["average stamina"], label = 'Average Agent Stamina')
@@ -39,7 +39,7 @@ def main(argv):
     plt.ylabel('Stats Value')
     plt.xlabel('Level')
     plt.legend()
-    plt.savefig(workPath+"/Agents stats per Level.png")
+    # plt.savefig(workPath+"/Agents stats per Level.png")
     # plt.show()
 
     plt.clf()
@@ -52,7 +52,7 @@ def main(argv):
     plt.ylabel('Agents')
     plt.xlabel('Level')
     plt.legend()
-    plt.savefig(workPath+"/Agents personality per Level.png")
+    # plt.savefig(workPath+"/Agents personality per Level.png")
     # plt.show()
 
     plt.clf()
@@ -65,8 +65,8 @@ def main(argv):
     plt.ylabel('Stat Amount')
     plt.xlabel('Level')
     plt.legend()
-    plt.savefig(workPath+"/Personality and Sanction per Level.png")
-    # plt.show()
+    # plt.savefig(workPath+"/Personality and Sanction per Level.png")
+    plt.show()
 
 if __name__ == "__main__":
    main(sys.argv[1:])
