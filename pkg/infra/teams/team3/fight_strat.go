@@ -44,7 +44,7 @@ func (a *AgentThree) FightAction(
 	disobey := rand.Intn(100)
 	// if disobey value is lower than personality then do not defect
 	// lower personality values mean more selfish (therefore more likely to defect)
-	if disobey < a.personality {
+	if disobey < (a.personality - ((a.experience / 40) * 5)) {
 		return proposedAction
 	} else {
 		return a.FightActionNoProposal(baseAgent)
