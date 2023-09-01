@@ -145,7 +145,7 @@ func (a *AgentThree) willSanctionConstant(agent agent.Agent) int {
 	D := float64(BoolToInt(AS.Defector.IsDefector()))
 
 	// shift and scale the agent reputation
-	S := (a.reputationMap[id] - 50) / 3
+	S := (a.GetReputation(id) - 50) / 3
 	// S := float64(rand.Intn(30) - 15)
 
 	sanction := int(D * (A*float64(a.personality) + B*S))
@@ -240,7 +240,7 @@ func (a *AgentThree) SortAgentsRep(prunedMap map[commons.ID]agent.Agent) []agent
 
 	// sort them according to (leaders, i.e. this agent) reputation, desc
 	sort.Slice(agents, func(i, j int) bool {
-		return a.reputationMap[agents[i].ID()] > a.reputationMap[agents[j].ID()]
+		return a.GetReputation(agents[i].ID()) > a.GetReputation(agents[j].ID())
 	})
 
 	return agents

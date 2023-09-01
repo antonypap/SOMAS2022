@@ -56,7 +56,7 @@ func (a *AgentThree) CompileTrustMessage(agentMap map[commons.ID]agent.Agent) me
 	repMapDeepCopy := make(map[commons.ID]float64)
 
 	for k, v := range a.reputationMap {
-		repMapDeepCopy[k] = v
+		repMapDeepCopy[k] = v.Reputation
 	}
 
 	trustMsg.MakeNewTrust(agentsToMessage, repMapDeepCopy)
@@ -81,12 +81,12 @@ func (a *AgentThree) HandleTrustMessage(m message.TaggedMessage) {
 	for id, sentRep := range t.Gossip {
 		ourRep, exists := a.reputationMap[id]
 		if exists {
-			diff := ourRep - sentRep
-			norm := diff * (a.reputationMap[m.Sender()] / 100.0)
-			newRep := ourRep + norm
-			a.reputationMap[id] = clampFloat(newRep, 0.0, 100.0)
+			diff := ourRep.Reputation - sentRep
+			norm := diff * (a.GetReputation(m.Sender()) / 100.0)
+			newRep := ourRep.Reputation + norm
+			ourRep.Reputation = clampFloat(newRep, 0.0, 100.0)
 		} else {
-			a.reputationMap[id] = sentRep
+			ourRep.Reputation = sentRep
 		}
 
 	}

@@ -34,7 +34,7 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 		// extract agent ids paired with (reputation + social capital) score
 		agentArray := make([]pair, 0, len(ids))
 		for _, id := range ids {
-			val := a.reputationMap[id] + float64(a.socialCap[id])
+			val := a.GetReputation(id) + float64(a.socialCap[id])
 			agentArray = append(agentArray, pair{id, val})
 		}
 		// sort
@@ -57,7 +57,8 @@ func (a *AgentThree) HandleConfidencePoll(baseAgent agent.BaseAgent) decision.In
 				defectorCount++
 			}
 		}
-		leaderRepSwing := (a.reputationMap[view.CurrentLeader()] - 30) / 10
+		leaderRep := a.reputationMap[view.CurrentLeader()]
+		leaderRepSwing := (leaderRep.Reputation - 30) / 10
 		// Should leader reputation allow leaniency?
 		voteNo := defectorCount - int(leaderRepSwing)
 		// if over 50% of top agents defected, then vote no
@@ -78,7 +79,7 @@ func (a *AgentThree) HandleElectionBallot(baseAgent agent.BaseAgent, param *deci
 	iterator := param.CandidateList().Iterator()
 	for !iterator.Done() {
 		id, _, _ := iterator.Next()
-		val := a.reputationMap[id] + float64(a.socialCap[id])
+		val := a.GetReputation(id) + float64(a.socialCap[id])
 		candidateArray = append(candidateArray, pair{id, val})
 	}
 	// sort
@@ -169,6 +170,45 @@ func (a *AgentThree) calcW2(id commons.ID) float64 {
 	return w2
 }
 
+func (a *AgentThree) SocialCapital(baseAgent agent.BaseAgent) {
+	view := baseAgent.View()
+	agentState := view.AgentState()
+	itr := agentState.Iterator()
+	// use random Go iterators to select population up to sample limit
+	count := 0
+
+	for !itr.Done() {
+		id, state, _ := itr.Next()
+		defector := state.Defector
+		if defector.IsDefector() {
+			// punish defectors, and slightly reward cooperators
+			a.socialCap[id] -= 2
+		} else {
+			a.socialCap[id] += 0.2
+		}
+		count++
+		if count == (int(a.samplePercent * float64(a.numAgents))) {
+			break
+		}
+	}
+}
+
+// func (a *AgentThree) Experience(baseAgent agent.BaseAgent) {
+// 	view := baseAgent.View()
+// 	agentState := view.AgentState()
+// 	itr := agentState.Iterator()
+// 	count := 0
+// 	for !itr.Done() {
+// 		id, state, _ := itr.Next()
+// 		exp := state.LevelsAlive
+// 		a.LevelsAlive[id] = int(exp)
+// 		if count == (int(a.samplePercent * float64(a.numAgents))) {
+// 			break
+// 		}
+// 	}
+
+// }
+
 func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 	view := baseAgent.View()
 	vAS := view.AgentState()
@@ -205,7 +245,18 @@ func (a *AgentThree) Reputation(baseAgent agent.BaseAgent) {
 			a.w1Map[id] = a.calcW1(hiddenState, id)
 			a.w2Map[id] = a.calcW2(id)
 
-			a.reputationMap[id] = a.w1Map[id]*needs + a.w2Map[id]*productivity
+			// agent := a.reputationMap[id]
+
+			// update reputation and experience
+			a.reputationMap[id] = reputation{
+				Reputation: a.w1Map[id]*needs + a.w2Map[id]*productivity,
+				Experience: float64(hiddenState.LevelsAlive),
+			}
+			// agent.Reputation = a.w1Map[id]*needs + a.w2Map[id]*productivity
+
+			// consider the agent's level
+			// exp := hiddenState.LevelsAlive
+			// agent.Experience = float64(exp)
 
 			// Store this rounds values for the next one
 			a.pastHPMap[id] = int(hiddenState.Hp)
@@ -247,223 +298,3 @@ func findAgentAction(agentIDsMap immutable.List[commons.ID], ID commons.ID) bool
 	}
 	return false
 }
-
-// alg 5
-// func (a *AgentThree) CalcReputation(baseAgent agent.BaseAgent) map[commons.ID]float64 {
-// 	view := baseAgent.View()
-// 	agentState := view.AgentState()
-
-// 	sample := rand.Intn(int(math.Ceil(float64(agentState.Len())*a.samplePercent))-1) + 1
-// 	counter := 1
-
-// 	currentLevel := int(view.CurrentLevel())
-// 	// init  history
-// 	if currentLevel == a.fightRoundsHistory.Len()-1 {
-// 		w1 = 0.0
-// 		w2 = 0.0
-
-// 		itr := agentState.Iterator()
-// 		for !itr.Done() {
-// 			if counter%sample == 0 {
-// 				id, _, _ := itr.Next()
-// 				//idN, _ := strconv.Atoi(id)
-// 				//fmt.Println(idN)
-// 				pastHP[id] = GetStartingHP()
-// 				pastStamina[id] = GetStartingStamina()
-// 			} else {
-// 				itr.Next()
-// 				counter++
-// 			}
-
-// 		}
-// 	}
-// 	productivity := 5.0
-// 	needs := 5.0
-// 	fairness := make(map[commons.ID]float64)
-// 	sortedfairness := make(map[commons.ID]float64)
-
-// 	itr := agentState.Iterator()
-// 	counter1 := 1
-
-// 	for i := 1; i <= int(math.Ceil(float64(agentState.Len())*a.samplePercent)); {
-// 		if counter1%sample == 0 {
-// 			id, hiddenState, _ := itr.Next()
-
-// 			w1 = a.calcW1(hiddenState, w1, pastHP[id], pastStamina[id])
-// 			w2 = a.calcW2(baseAgent, w2)
-
-// 			score := w1*needs + w2*productivity
-
-// 			fairness[id] = score
-
-// 			pastHP[id] = int(hiddenState.Hp)
-// 			pastStamina[id] = int(hiddenState.Stamina)
-// 			i++
-// 		} else {
-// 			itr.Next()
-// 			counter1++
-// 		}
-
-// 	}
-
-// 	// get keys for sorting
-// 	keys := make([]string, 0, len(fairness))
-// 	for key := range fairness {
-// 		keys = append(keys, key)
-// 	}
-
-// 	// sort map by decreasing score using keys
-// 	sort.SliceStable(keys, func(i, j int) bool {
-// 		return fairness[keys[i]] > fairness[keys[j]]
-// 	})
-
-// 	// reshuffle array
-// 	for _, key := range keys {
-// 		sortedfairness[key] = fairness[key]
-// 	}
-
-// 	return sortedfairness
-// }
-
-//Agent 3 Voting Strategy
-
-// Effectivness code
-// var effective bool
-
-// var initial_monster_attack int = 1
-
-// var //get monster attack
-
-// var prevLevel int = 0
-// func  (a *AgentThree) Effectivness_measure(baseAgent agent.BaseAgent){
-//     effective := "True"
-// 	monster_attack := globalState.MonsterAttack
-//     num_agents_alive := len(aliveAgentIDs)
-//     percentage_change_w_monster := 1-((monster_attack - initial_monster_attack)/initial_monster_attack)
-//     if num_agents_alive>(prevLevel*percentage_change_w_monster){
-//         effective := "True"
-//     } else{
-//         effective := "False"
-//     }
-//     prevLevel:=num_agents_alive
-//     initial_monster_attack:=monster_attack
-//     return effective
-// }
-
-// func (a *AgentThree) Disobedience(baseAgent agent.BaseAgent) {
-// 	view := baseAgent.View()
-// 	agentState := view.AgentState()
-// 	disobedienceMap := make([]int, agentState.Len())
-// 	var agentDefected bool
-// 	itr := agentState.Iterator()
-// 	i := 0
-
-// 	for !itr.Done() {
-// 		id, hiddenState, _ := itr.Next()
-
-// 		disobedienceMap[i] += BoolToInt(hiddenState.Defector.IsDefector())
-// 		// did we disobey
-// 		if id == baseAgent.ID() {
-// 			if hiddenState.Defector.IsDefector() {
-// 				agentDefected = true
-// 			} else {
-// 				agentDefected = false
-// 			}
-// 		}
-// 	}
-
-// 	borda := a.Reputation(baseAgent)
-// 	bordaPerCent := BordaPercentage(baseAgent, borda)
-// 	for i := range disobedienceMap {
-// 		if disobedienceMap[i] >= 5 {
-// 			if bordaPerCent < 25 {
-// 				// a.utilityScore[baseAgent.ID()] =a.utilityScore[baseAgent.ID()]
-// 			} else if bordaPerCent > 25 && bordaPerCent < 50 {
-// 				a.utilityScore[baseAgent.ID()] -= 1
-// 			} else if bordaPerCent > 50 {
-// 				a.utilityScore[baseAgent.ID()] -= 2
-// 			} else if agentDefected {
-// 				a.utilityScore[baseAgent.ID()] -= 4
-// 			}
-// 		}
-// 	}
-// }
-
-// quick function to check if a is in list b
-// func in_list(a string, list []string) bool {
-// 	for _, b := range list {
-// 		if b == a {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
-//Now the functions for the voting
-
-// var trusted_network bool := "False"
-// var Agent_benefit bool := "False"
-// var action_done string // Pleae ping from the thread what our agent did in the last level (fought, defeneded, or cowered)
-
-// //Please fill in the blanks for id_Agent_given_to parameter (get from the thread the ID of the agent that received my resource inestead of me)
-// //Also make sure fightDecision() is used correctly
-// //Please fill in for CliqueList
-// func  (a *AgentThree) update_Agent_benefit(baseAgent agent.BaseAgent, action_done){
-//     Common_resource_given:= // please get from the thread if the common pool resource the agent asked for was given to the agent or not
-//     Agent_benefit="True"
-//     if action_done!=fightDecision(){
-//         Agent_benefit="False"
-//     }
-//     if Common_resource_given="False" && Sorted_agents[id_Agent_given_to]<Sorted_agents[my_agent_ID] && in_list(id_given_to, cliqueList) {
-//         Agent_benefit="True"
-//     }
-//     else if Common_resource_given="False" && Sorted_agents[id_Agent_given_to]<Sorted_agents[my_agent_ID]{
-//         Agent_benefit="False"
-//     }
-// }
-
-// //Please fill in the blanks for chair.ID (id of current chair) and ListClique(list of our trusted Network)
-// //Please full for Utility function (Get current Utility score of the chair)
-// func  (a *AgentThree) update_Trusted_network(baseAgent agent.BaseAgent, action_done){
-//     if in_list(chair.ID, CliqueList) && Utility(chair.ID)>=8 {
-//         Trusted_network="True"
-//     }
-// }
-
-// //The following Code is for confidence vote
-// //Fill in Chair.ID
-// var vote int
-// var counter_not_effective int = 0//to count the levels a chair is effective in.
-// var counter_not_benefit_agent int = 0
-// //update counter
-
-// func  (a *AgentThree) Confidence_vote(baseAgent agent.BaseAgent){
-//     vote:=1
-//     Effectivness_measure()
-//     update_Agent_benefit()
-//     if !effective {
-//         counter_not_effective+=1
-//     }else {
-//         counter_not_effective:=0
-//     }
-//     if !Agent_benefit{
-//         counter_not_benefit_agent +=1
-//     }else{
-//         counter_not_benefit_agent := 0
-//     }
-//     if Trusted_network && counter_not_effective>2 {
-//         return vote:=0
-//     }
-//     if Trusted_network && counter_not_benefit_agent>2{
-//         return vote:=0
-//     }
-//     if  counter_not_effective>1 {
-//         return vote:= 0
-//     }
-//     if counter_not_benefit_agent>1 {
-//         return vote := 0
-//     }
-
-// }
-
-//Now to vote for next chair if chair is deposed
