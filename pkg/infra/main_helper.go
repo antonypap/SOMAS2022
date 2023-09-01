@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"time"
@@ -58,7 +60,16 @@ func initGame() {
 	initGameConfig := stages.InitGameConfig()
 	gameConfig = &initGameConfig
 	defStrategyMap := stages.ChooseDefaultStrategyMap(InitAgentMap)
-	numAgents, agents, agentStateMap, inventoryMap := stages.InitAgents(defStrategyMap, initGameConfig, viewPtr)
+	defSurvivorStrategyMap := stages.ChooseDefaultSurvivorStrategyMap(InitSurvivorMap)
+	/*
+		Here enter the call to the function to extract the survivor agent map and assign
+	*/
+	survivedAgentMap := stages.InitSurvivorMap()
+	/*
+		CHANGE HERE
+	*/
+	// numAgents, agents, agentStateMap, inventoryMap := stages.InitAgents(defStrategyMap, defSurvivorStrategyMap, initGameConfig, viewPtr)
+	numAgents, agents, agentStateMap, inventoryMap := stages.InitAgents(defStrategyMap, defSurvivorStrategyMap, initGameConfig, viewPtr, survivedAgentMap)
 	gameConfig.InitialNumAgents = numAgents
 
 	globalState = &state.State{
@@ -246,6 +257,37 @@ func generateLootPool(numAgents uint) *state.LootPool {
 func uintStr(in uint) string {
 	return strconv.Itoa(int(in))
 }
+
+/*
+	Output Helpers
+*/
+
+func OutputAgentMap(survivors map[commons.ID]state.SurvivorAgentState) {
+	jsonBuf, err := json.MarshalIndent(survivors, "", "\t")
+	if err != nil {
+		log.Fatalf("Failed to Marshal gameStates: %v", err)
+		return
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get working directory: %v", err)
+		return
+	}
+
+	outputDir := path.Join(wd, "output/survivors.json")
+
+	err = os.WriteFile(outputDir, jsonBuf, 0777)
+	if err != nil {
+		log.Fatalf("Failed to write agentMap to file: %v", err)
+		return
+	}
+}
+
+/*
+	CSV Logging Help
+*/
+
 func initCsvLogging() (*csv.Writer, *os.File) {
 	// create csv for logging
 
@@ -259,6 +301,10 @@ func initCsvLogging() (*csv.Writer, *os.File) {
 	firstRow := []string{"level", "total agents alive", "average health", "average stamina", "average attack", "average defense", "average personality", "average sanctioned", "count selfless", "count selfish", "count collective"}
 	if err := w.Write(firstRow); err != nil {
 		log.Fatalln("error writing record to file", err)
+	}
+	secondRow := []string{"0", "90", "1000", "2000", "20", "20", "50", "0", "30", "30", "30"}
+	if err := w.Write(secondRow); err != nil {
+		log.Fatalln("error writing zeroth level to file", err)
 	}
 	return w, csvFile
 }
@@ -307,4 +353,33 @@ func logLevel(levelLog logging.LevelStages, agentmap map[string]agent.Agent, w *
 	}
 
 	w.Flush()
+}
+
+func LogTracking(agentMap map[string]agent.Agent, trackLog *logging.TrackLog, fightActions decision.FightResult, prunedAgentMap map[commons.ID]agent.Agent) {
+	for id, a := range agentMap {
+		log := trackLog.Agents[id]
+		state := a.AgentState()
+		defector := a.AgentState().Defector
+		Personality, _ := a.GetStats()
+		var sanctioned int
+		if _, ok := prunedAgentMap[id]; ok {
+			sanctioned = 0
+		} else {
+			sanctioned = 1
+		}
+
+		trackLog.Agents[id] = logging.AgentTrack{
+			FightAction: append(log.FightAction, uint(fightActions.Choices[id])),
+			Hp:          append(log.Hp, a.AgentState().Hp),
+			Stamina:     append(log.Stamina, a.AgentState().Stamina),
+			Attack:      append(log.Attack, state.TotalAttack()),
+			Defense:     append(log.Defense, state.TotalDefense()),
+			LevelsAlive: append(log.LevelsAlive, a.AgentState().LevelsAlive),
+			TSNlength:   append(log.TSNlength, uint(len(a.GetTSN()))),
+			Personality: append(log.Personality, uint(Personality)),
+			// Sanctioned:  append(log.Sanctioned, defector.IsDefector()),
+			Defector:   append(log.Defector, defector.IsDefector()),
+			Sanctioned: append(log.Sanctioned, sanctioned),
+		}
+	}
 }
