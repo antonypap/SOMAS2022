@@ -36,6 +36,8 @@ func DealDamage(damageToDeal uint, agentsFighting []string, agentMap map[commons
 				Shields:     agentState.Shields,
 				WeaponInUse: agentState.WeaponInUse,
 				ShieldInUse: agentState.ShieldInUse,
+				LevelsAlive: agentState.LevelsAlive,
+				Defector:    agentState.Defector,
 			}
 		}
 	}

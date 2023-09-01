@@ -38,6 +38,7 @@ type AgentState struct {
 	Weapons     immutable.List[Item]
 	Shields     immutable.List[Item]
 	Defector    Defector
+	LevelsAlive uint
 }
 
 func (s *AgentState) HasItem(itemType commons.ItemType, itemID commons.ItemID) bool {
@@ -117,4 +118,11 @@ type State struct {
 	CurrentLeader   commons.ID
 	LeaderManifesto decision.Manifesto
 	Defection       bool
+}
+
+type SurvivorAgentState struct {
+	Hp          uint
+	Stamina     uint
+	Personality int
+	LevelsAlive uint
 }

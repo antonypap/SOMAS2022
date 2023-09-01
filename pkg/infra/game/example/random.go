@@ -310,6 +310,8 @@ func (r *RandomAgent) HandleTrustMessage(message message.TaggedMessage)
 
 func (r *RandomAgent) GetStats() (int, int)
 
+func (r *RandomAgent) GetTSN() []commons.ID
+
 func (r *RandomAgent) ChooseItem(BaseAgent agent.BaseAgent,
 	weaponSet []state.Item,
 	shieldSet []state.Item,
