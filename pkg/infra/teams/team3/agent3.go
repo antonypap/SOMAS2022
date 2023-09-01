@@ -21,9 +21,10 @@ type AgentThree struct {
 	numAgents          int
 
 	personality    int
+	experience     int
 	TSN            []commons.ID
-	reputationMap  map[commons.ID]float64
-	socialCap      map[commons.ID]int
+	reputationMap  map[commons.ID]reputation
+	socialCap      map[commons.ID]float64
 	w1Map          map[commons.ID]float64
 	w2Map          map[commons.ID]float64
 	pastHPMap      map[commons.ID]int
@@ -50,6 +51,11 @@ type AgentThree struct {
 	sanctionLength int
 
 	mutex sync.RWMutex
+}
+
+type reputation struct {
+	Reputation float64
+	Experience float64
 }
 
 // Update internal parameters at the end of each stage
@@ -100,6 +106,8 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 
 	// update parameters
 	a.Reputation(baseAgent)
+	a.SocialCapital(baseAgent)
+	// a.Experience(baseAgent)
 	a.UpdateTotalUtility(baseAgent)
 	a.ResetContacts()
 	a.UpdateTSN(baseAgent)
@@ -119,6 +127,22 @@ func (a *AgentThree) UpdateInternalState(baseAgent agent.BaseAgent, history *com
 
 func (a *AgentThree) GetStats() (int, int) {
 	return a.personality, a.sanctioned
+}
+
+func (a *AgentThree) GetTSN() []commons.ID {
+	return a.TSN
+}
+
+func (a *AgentThree) GetReputation(id commons.ID) float64 {
+	agent := a.reputationMap[id]
+	rep := agent.Reputation
+	return rep
+}
+
+func (a *AgentThree) GetExperience(id commons.ID) float64 {
+	agent := a.reputationMap[id]
+	exp := agent.Experience
+	return exp
 }
 
 func (a *AgentThree) UpdatePersonality(baseAgent agent.BaseAgent) {
@@ -168,17 +192,18 @@ func NewAgentThreeNeutral() agent.Strategy {
 		chairTolerance:    0,
 		proposalTolerance: make(map[commons.ID]int, 0),
 		personality:       int(dis),
-		reputationMap:     make(map[commons.ID]float64, 0),
+		// experience:		0,
+		reputationMap:     make(map[commons.ID]reputation, 0),
 		w1Map:             make(map[commons.ID]float64, 0),
 		w2Map:             make(map[commons.ID]float64, 0),
 		pastHPMap:         make(map[commons.ID]int, 0),
 		pastStaminaMap:    make(map[commons.ID]int, 0),
-		socialCap:         make(map[commons.ID]int, 25),
+		socialCap:         make(map[commons.ID]float64, 25),
 		sanctioned:        0,
 		statsQueue:        *makeStatsQueue(3),
 		changeInit:        0,
 		alpha:             5,
-		samplePercent:     0.25,
+		samplePercent:     0.45,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
@@ -197,17 +222,18 @@ func NewAgentThreePassive() agent.Strategy {
 		chairTolerance:    0,
 		proposalTolerance: make(map[commons.ID]int, 0),
 		personality:       int(dis),
-		reputationMap:     make(map[commons.ID]float64, 0),
+		// experience:		0,
+		reputationMap:     make(map[commons.ID]reputation, 0),
 		w1Map:             make(map[commons.ID]float64, 0),
 		w2Map:             make(map[commons.ID]float64, 0),
 		pastHPMap:         make(map[commons.ID]int, 0),
 		pastStaminaMap:    make(map[commons.ID]int, 0),
-		socialCap:         make(map[commons.ID]int, 25),
+		socialCap:         make(map[commons.ID]float64, 25),
 		sanctioned:        0,
 		statsQueue:        *makeStatsQueue(3),
 		changeInit:        0,
 		alpha:             5,
-		samplePercent:     0.25,
+		samplePercent:     0.45,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
@@ -225,17 +251,47 @@ func NewAgentThreeAggressive() agent.Strategy {
 		chairTolerance:    0,
 		proposalTolerance: make(map[commons.ID]int, 0),
 		personality:       int(dis),
-		reputationMap:     make(map[commons.ID]float64, 0),
+		// experience:		0,
+		reputationMap:     make(map[commons.ID]reputation, 0),
 		w1Map:             make(map[commons.ID]float64, 0),
 		w2Map:             make(map[commons.ID]float64, 0),
 		pastHPMap:         make(map[commons.ID]int, 0),
 		pastStaminaMap:    make(map[commons.ID]int, 0),
-		socialCap:         make(map[commons.ID]int, 25),
+		socialCap:         make(map[commons.ID]float64, 25),
 		sanctioned:        0,
 		statsQueue:        *makeStatsQueue(3),
 		changeInit:        0,
 		alpha:             5,
-		samplePercent:     0.25,
+		samplePercent:     0.45,
+		sanctionHistory:   make(map[commons.ID]([]int)),
+		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
+		mutex:             sync.RWMutex{},
+		sanctionLength:    0,
+	}
+}
+
+func SurvivedAgentThree(personality uint, experience uint) agent.Strategy {
+	// func SurvivedAgentThree(personality uint) agent.Strategy {
+	return &AgentThree{
+		utilityScore:      CreateUtility(),
+		uR:                CreateUtility(),
+		uP:                CreateUtility(),
+		uC:                CreateUtility(),
+		chairTolerance:    0,
+		proposalTolerance: make(map[commons.ID]int, 0),
+		personality:       int(personality),
+		experience:        int(experience),
+		reputationMap:     make(map[commons.ID]reputation, 0),
+		w1Map:             make(map[commons.ID]float64, 0),
+		w2Map:             make(map[commons.ID]float64, 0),
+		pastHPMap:         make(map[commons.ID]int, 0),
+		pastStaminaMap:    make(map[commons.ID]int, 0),
+		socialCap:         make(map[commons.ID]float64, 25),
+		sanctioned:        0,
+		statsQueue:        *makeStatsQueue(3),
+		changeInit:        0,
+		alpha:             5,
+		samplePercent:     0.45,
 		sanctionHistory:   make(map[commons.ID]([]int)),
 		activeSanctionMap: make(map[commons.ID]sanctions.SanctionActivity),
 		mutex:             sync.RWMutex{},
