@@ -125,10 +125,12 @@ def plot_track(tracking: Any,filename: str):
 
     # plot
     plt.figure(figsize=(13,10))
+    # list of colors
+    colors = ["blue", "red", "cyan", "pink", "yellow"]
 
     plt.subplot(2,2,1)
     for i in range(min(len(agents),5)):
-        plt.plot(range(0, len( plotAgents[i]["Personality"] )), plotAgents[i]["Personality"])
+        plt.plot(range(0, len( plotAgents[i]["Personality"] )), plotAgents[i]["Personality"], color=colors[i])
 
     plt.title("Personality Evolution Over Game For Up To 5 Random Agents")
     plt.ylabel("Personality")
@@ -136,7 +138,7 @@ def plot_track(tracking: Any,filename: str):
 
     plt.subplot(2,2,2)
     for i in range(min(len(agents),5)):
-        plt.plot(range(0, len( plotAgents[i]["TSNlength"] )), plotAgents[i]["TSNlength"])
+        plt.plot(range(0, len( plotAgents[i]["TSNlength"] )), plotAgents[i]["TSNlength"], color=colors[i])
 
     plt.title("TSN Size Evolution Over Game For Up To 5 Random Agents")
     plt.ylabel("TSN Size")
@@ -144,7 +146,7 @@ def plot_track(tracking: Any,filename: str):
 
     plt.subplot(2,2,3)
     for i in range(min(len(agents),5)):
-        plt.plot(range(0, len( plotAgents[i]["Hp"] )), plotAgents[i]["Hp"])
+        plt.plot(range(0, len( plotAgents[i]["Hp"] )), plotAgents[i]["Hp"], color=colors[i])
 
     plt.title("Health Evolution Over Game For Up To 5 Random Agents")
     plt.ylabel("Hp")
@@ -152,7 +154,7 @@ def plot_track(tracking: Any,filename: str):
 
     plt.subplot(2,2,4)
     for i in range(min(len(agents),5)):
-        plt.plot(range(0, len( plotAgents[i]["FightAction"] )), plotAgents[i]["FightAction"])
+        plt.plot(range(0, len( plotAgents[i]["FightAction"] )), plotAgents[i]["FightAction"], color=colors[i])
 
     plt.title("Fight Action Evolution Over Game For Up To 5 Random Agents")
     plt.ylabel("Fight Action")
@@ -191,7 +193,7 @@ def plot_sanctioned(tracking: Any, filename: str) -> None:
     # plot
     plt.figure(figsize=(13,10))
     colors = ["black", "red", "green", "blue", "yellow"]
-    for i in range(min(len(agents), 5)):
+    for i in range(min(len(plotAgents), 5)):
         plt.plot(range(0, len( plotAgents[i]["Sanctioned"] )), plotAgents[i]["Sanctioned"], label="Sanctioned", color=colors[i])
         plt.plot(range(0, len( plotAgents[i]["Defector"] )), plotAgents[i]["Defector"], linestyle="--", label="Defector", color=colors[i])
 
@@ -326,3 +328,36 @@ def plotAll(mode: bool = True) -> None:
     plot_sanctioned(survivors, "sanctioned.png")
     plot_game()
     print("PLOT SPIDERWEB") # plot this in colab as the color mapoing is not working on my machine
+
+
+
+def plotRewards():
+    """
+    Plot all the rewards from the different models
+    """
+    
+    df1 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_3.csv").columns.to_numpy()
+    df2 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_4.csv").columns.to_numpy()
+    df3 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_5.csv").columns.to_numpy()
+    df4 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_6.csv").columns.to_numpy()
+    df5 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_7.csv").columns.to_numpy()
+    df6 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_8.csv").columns.to_numpy()
+    df7 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_9.csv").columns.to_numpy()
+    df8 = pd.read_csv("../Tracking Visualisations/RL/RL_average_rewards_10.csv").columns.to_numpy()
+
+    data = [df1,df2,df3,df4,df5,df6,df7,df8]
+    data = [np.array([float(x[:5]) for x in df]) for df in data]
+
+    plt.figure(figsize = (10,8))
+    plt.plot(data[0], color='black', label='Q-Learning - FAS')
+    plt.plot(data[1], color='blue', label='Q-Learning - PAS')
+    plt.plot(data[2], color='red', label='SARSA-V')
+    plt.plot(data[3], color='orange', label='SARSA-VDNN-Drop')
+    plt.plot(data[4], color='pink', label='Adam')
+    plt.plot(data[5], color='cyan', label='SARSA-VDNN')
+    plt.plot(data[6], color='green', label='SGD')
+    plt.title("Average Rewards Over Pervious 50 Episodes Per Episode")
+    plt.ylabel("Average Reward")
+    plt.xlabel("Episode")
+    plt.legend()
+    plt.show()

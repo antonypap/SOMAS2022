@@ -37,7 +37,7 @@ class escapeThePitEnv:
     Action size and Action space using the number of new agents needed in the game (env.numNewAgents)
     
     ** State Space **
-    A typle dictating the surviiving construct of the agents. The state space is as follows:
+    A tuple dictating the surviiving construct of the agents. The state space is as follows:
 
         | num       | Observation                           | Min   | Max   |
         |-----------|---------------------------------------|-------|-------|
@@ -104,6 +104,7 @@ class escapeThePitEnv:
 
         # run the game with the action and retriee the results
         if self.counter == 1:
+            action = [action[0], action[1] + 36, action[2]]  # for the first sound, add the extra agents (to mkae 90) as action only considers new agents (60% of total)
             survivedAgents, progress = play.runBattle(action, True)
         else: 
             survivedAgents, progress = play.runBattle(action, False)
@@ -151,6 +152,33 @@ class escapeThePitEnv:
         self.done = False
         self.counter = 1 
         self.state = np.array([np.zeros(self.state_size).astype(int)])
+        # change the .env file START to true
+        dotenv_file = dotenv.find_dotenv()
+        dotenv.load_dotenv(dotenv_file)
+        eh.setenv("START", True, dotenv_file)
+        survivors = "{}"
+        with open("./output/survivors.json", "w") as json_file:
+            json_file.write(survivors)
+
+        return self.state
+    
+    def resetRL(self) -> np.ndarray:
+        """
+        Reset the environment parameteres to start the game over when using Reinforcement Learning
+        
+        This envolves reseting the counter, done and state values whilst also setting the 
+        environment START parameter to TRUE so that the first game uses the corrent 
+        initialiseation functions.
+        ----------------------------------------
+        @args:
+            None
+        @returns:
+            None
+        """
+        # reset the counter and done values
+        self.done = False
+        self.counter = 1 
+        self.state = np.array([np.array([36,0,0]).astype(int)])
         # change the .env file START to true
         dotenv_file = dotenv.find_dotenv()
         dotenv.load_dotenv(dotenv_file)

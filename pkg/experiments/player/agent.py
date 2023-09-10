@@ -10,8 +10,9 @@ import random
 import numpy as np
 from collections import deque
 from keras.models import Sequential, clone_model
-from keras.layers import Dense, Dropout
-from keras.optimizers import Adam
+from keras.layers import Dense, Dropout, BatchNormalization
+from keras.optimizers import Adam, SGD 
+from keras.callbacks import ReduceLROnPlateau
 from keras import backend as K
 
 
@@ -29,7 +30,7 @@ class agent:
         self.action_space = self.getActionSpace(self.numNewAgents, self.step_size)
         self.action_size = len(self.action_space)      # Number of possible actions (int)
         self.memory = deque(maxlen=1000)    # memory length
-        self.gamma = 0.80
+        self.gamma = 0.90
         self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.999      # rate at which exploration decays
@@ -59,11 +60,24 @@ class agent:
         model.add(Dense(64, input_dim=(self.state_size+self.action_size), activation='relu'))
         model.add(Dropout(0.2))
         model.add(Dense(32, activation='relu'))
+        # model.add(BatchNormalization())
         model.add(Dense(1))
         # compile the model
-        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        # model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        optimizer = Adam(learning_rate=self.learning_rate)
+        # optimizer = SGD(learning_rate=self.learning_rate)
+        model.compile(loss='mse', optimizer=optimizer)
+
+        model.summary()
 
         return model
+
+    def lr_decay(self, epoch: int) -> float:
+        """
+        learning rate decay callback
+        """
+        
+        K.set_value(self.model.optimizer.lr, self.learning_rate * np.power(0.5, np.floor((1+epoch)/10.0)) )
 
 
     def remember(self, state: Tuple[int], action: Tuple[int], reward: int, next_state: Tuple[int], done: int) -> None:
@@ -82,6 +96,7 @@ class agent:
     def act(self, state: List[int]) -> Any:
         """
         Choose action either by exploitation or exploration based on Greedy Algorithm
+        The action is (selfish, selfless, collective)
         """
         if np.random.rand() <= self.epsilon:
             # return a random action 
@@ -126,8 +141,7 @@ class agent:
         q_values = self.model.predict(state_action_input, verbose="0", batch_size=32)
         # choose action with hightest q-value
         action = np.argmax(q_values)
-        real_action = self.action_space[action]
-        return real_action
+        return self.action_space[action]
         
 
     def load(self, name: str) -> None:
@@ -174,16 +188,11 @@ class agent:
         ############################
         # no need to predict based on state_action pair, as the regression gives a single output, not a vector
         # therefore all values will become the target_q_values
-
-        # q_values = self.model.predict(batch_state_action)
-        # q_values[batch_actions] = target_q_values
-        # q_values = target_q_values
-        # q_values[np.arange(batch_size), batch_actions] = target_q_values
         ############################
 
         # train the model
-        self.model.fit(batch_state_action, target_q_values, verbose="0", batch_size=32)
-        # self.model.train_on_batch(batch_state_action, target_q_values)
+        # self.model.fit(batch_state_action, target_q_values, verbose="0", batch_size=32)
+        self.model.train_on_batch(batch_state_action, target_q_values)
         # update epsilon
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
@@ -215,8 +224,11 @@ class agent:
 
         return np.array(output)
 
+#######################################################
+###################### Q-LEARNING #####################
+#######################################################
 
-    # def _build_model(self) -> Sequential:
+    # def _build_modelQ(self) -> Sequential:
     #     """
     #     Build the neural network the agent uses to learn
     #     """
@@ -225,11 +237,13 @@ class agent:
     #     model.add(Dense(32, activation='relu'))
     #     model.add(Dense(self.action_size, activation='linear'))
     #     # compile the model
-    #     model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+    #     model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+
+    #     model.summary()
 
     #     return model
 
-    # def replay(self, batch_size: int) -> None:
+    # def replayQ(self, batch_size: int) -> None:
     #     """
     #     Perform the Q-Learning method
     #     """
@@ -249,45 +263,45 @@ class agent:
     #     # Q-Learning
     #     ###
     #     # compute target with forward pass
-    #     target = (batch_reward + self.gamma * np.amax(self.model.predict(batch_next_state), 1))
+    #     target = (batch_reward + self.gamma * np.amax(self.model.predict(batch_next_state, verbose="0", batch_size=32), 1))
     #     # replace target with reward (when done is true)
     #     target[batch_done == 1] = batch_reward[batch_done == 1]
     #     # do a forward pass using ```state```
-    #     target_f = self.model.predict(batch_state)
+    #     target_f = self.model.predict(batch_state, verbose="0", batch_size=32)
 
     #     for k in range(target_f.shape[0]):
     #         # for each action, update the parameter for target/action pair
     #         target_f[k][batch_action[k]] = target[k]
         
     #     # update the network 
+    #     K.placeholder(shape=[32,189], dtype=float)
     #     self.model.train_on_batch(batch_state, target_f)
     #     if self.epsilon > self.epsilon_min:
     #         self.epsilon *= self.epsilon_decay
 
 
-        # def exploit(self, state: Tuple[int]) -> Any:
-    #     """
-    #     exploit learned knowledgem with no random exploration step
-    #     """
-    #     # build one hot envoded state-action
-    #     state_action_input = np.concatenate((state, np.eye(self.action_size)[np.newaxis,:]))
-    #     q_values = self.model.predict(state_action_input, verbose="0", batch_size=32)
-    #     # choose action with the highest q-value
-    #     action = np.argmax(q_values)
-    #     return action 
 
-
-    # def act(self, state: Tuple[int]) -> Any:
+    # def actQ(self, state: Tuple[int]) -> Any:
     #     """
     #     Choose action either by exploitation or exploration
     #     """
     #     if np.random.rand() <= self.epsilon:
-    #         return random.randrange(self.action_size)
-    #     act_values = self.model.predict(state)
-    #     return np.argmax(act_values[0]) # return action
+    #         action = random.randrange(self.action_size)
+    #         real_action = self.action_space[action]
+    #         return real_action
+        
+    #     act_values = self.model.predict(state, verbose="0", batch_size=32)
+    #     action = np.argmax(act_values[0])
+    #     real_action = self.action_space[action]
+    #     # update counter
+    #     self.counter += 1
 
-    # def remember(self, state: Tuple[int], action: Tuple[int], reward: int, next_state: Tuple[int], done: int) -> None:
+    #     return real_action # return action
+
+    # def rememberQ(self, state: Tuple[int], action: Tuple[int], reward: int, next_state: Tuple[int], done: int) -> None:
     #     """
     #     add results of move to the memory deque
     #     """
+    #     action = np.where(self.action_space == action)[0][0]
     #     self.memory.append((state, action, reward, next_state, done))
+

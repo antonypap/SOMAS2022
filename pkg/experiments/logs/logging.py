@@ -47,6 +47,7 @@ def createSurvivorsLog() -> None:
     tracklog = ExtractSurvivorsFromTrackLog()
     # save tracklog as json
     tracklog.to_json("./output/survivorsTrack.json")
+    print(f'************ Survivors log created with: {len(tracklog.columns)} remaining ************')
 
 def updateSurvivorsLog() -> None:
     """

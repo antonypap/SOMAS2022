@@ -26,10 +26,10 @@ def main(arg):
     env = game_env.escapeThePitEnv()
     env.reset()
     if verbose == "True":
-        print("=============== GAME STARTING ====================")
+        print(f"=============== GAME STARTING USING {mode} ====================")
     points = 0
     number_of_agents = 90
-    rounds = 3
+    rounds = 10
     oldSurvived = [0,0,0]
     output = []
 
